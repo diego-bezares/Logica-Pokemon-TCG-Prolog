@@ -1,4 +1,4 @@
-:- module(TDA-card, [
+:- module(tda-card, [
     initEnergyCard/4,
     initPokemonCard/13,
     initTrainerCard/7
