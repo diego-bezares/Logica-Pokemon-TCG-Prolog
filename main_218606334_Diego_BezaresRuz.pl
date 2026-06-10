@@ -1,4 +1,46 @@
 
+% ================== FUNCIONES AUXILIARES ==========================
+
+% ===============================================
+% contar_copias/3: Cuenta cuantas cartas hay en una lista con el mismo nombre.
+% Meta Primaria: contar_copias(NombreBuscado, ListaCartas, Cantidad).
+
+% Caso Base: ListaCartas es vacía.
+contar_copias(_, [], 0).
+
+% Caso Recursivo 1: El nombre coincide.
+contar_copias(NombreBuscado, [Cabeza | Cola], Cantidad):-
+  getNombreCard(Cabeza, Nombre),
+  NombreBuscado == Nombre,
+  contar_copias(NombreBuscado, Cola, CantidadCola),
+  Cantidad is CantidadCola + 1.
+  
+% Caso Recursivo 2: El nombre no coincide.
+contar_copias(NombreBuscado, [Cabeza | Cola], Cantidad):-
+  getNombreCard(Cabeza, Nombre),
+  NombreBuscado \== Nombre,
+  contar_copias(NombreBuscado, Cola, Cantidad).
+% ===============================================
+
+% ===============================================
+% validar_limite_copias/2: Valida que la cantidad de copias de una carta de tipo entrenador
+% o pokemon se menor o igual a 4.
+% Meta Primaria: validar_limite_copias(Mazo, CartasARevisar).
+
+% Caso Base: CartasARevisar es vacio.
+validar_limites_copias(_, []).
+
+% Caso Recursivo 1: La Cabeza de CartasARevisar es una carta tipo energía.
+validar_limites_copias(Mazo, [Cabeza | Cola]):-
+  getTypeCard(Cabeza, Tipo),
+  Tipo == energy,
+  validar_limites_copias(Mazo, Cola).
+  
+
+  
+
+
+
 % ================== REQUERIMIENTOS FUNCIONALES ====================
 
 % ==================================================================
@@ -32,3 +74,9 @@ createPokemonCard(Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, R
 % ==================================================================
 createTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard) :-
   initTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard).
+
+% ==================================================================
+% RF06: createDeck/2
+% Meta Primaria: createDeck(Cards, Deck).
+% Meta Secundaria: 
+% ==================================================================
