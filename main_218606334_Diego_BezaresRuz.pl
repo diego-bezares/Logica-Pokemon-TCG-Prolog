@@ -28,14 +28,51 @@ contar_copias(NombreBuscado, [Cabeza | Cola], Cantidad):-
 % Meta Primaria: validar_limite_copias(Mazo, CartasARevisar).
 
 % Caso Base: CartasARevisar es vacio.
-validar_limites_copias(_, []).
+validar_limite_copias(_, []).
 
 % Caso Recursivo 1: La Cabeza de CartasARevisar es una carta tipo energía.
-validar_limites_copias(Mazo, [Cabeza | Cola]):-
+validar_limite_copias(Mazo, [Cabeza | Cola]):-
   getTypeCard(Cabeza, Tipo),
   Tipo == energy,
-  validar_limites_copias(Mazo, Cola).
-  
+  validar_limite_copias(Mazo, Cola).
+
+% Caso Recursivo 2: La Cabeza de CartasARevisar no es una carta tipo energía y su límite de copias
+% es menor o igual a 4.
+validar_limite_copias(Mazo, [Cabeza | Cola]):-
+  getTypeCard(Cabeza, Tipo),
+  Tipo \== energy,
+  getNombreCard(Cabeza, NombreBuscado),
+  contar_copias(NombreBuscado, Mazo, Copias),
+  Copias =< 4,
+  validar_limite_copias(Mazo, Cola).
+% ===============================================
+
+% ===============================================
+% tiene_pokemon_basico/1: Valida si en una lista de cartas existe al menos una de tipo pokemon
+% con el campo EvolucionDe vacio (null).
+% Meta Primaria: tiene_pokemon_basico(ListaCartas).
+
+% Caso Base Positivo: La cabeza de la lista es un pokemon y básico.
+tiene_pokemon_basico([Cabeza | _]):-
+  getTypeCard(Cabeza, Tipo),
+  Tipo == pokemon,
+  getEvolucionDePoke(Cabeza, EvolucionDe),
+  EvolucionDe == null.
+
+% Caso Recursivo 1: La cabeza de la lista no es un pokemon, se sigue buscando.
+tiene_pokemon_basico([Cabeza | Cola]):-
+  getTypeCard(Cabeza, Tipo),
+  Tipo \== pokemon,
+  tiene_pokemon_basico(Cola).
+
+% Caso Recursivo 2: La cabeza de la lista es un pokemon, pero no básico, se sigue buscando.
+tiene_pokemon_basico([Cabeza | Cola]):-
+  getTypeCard(Cabeza, Tipo),
+  Tipo == pokemon,
+  getEvolucionDePoke(Cabeza; EvolucionDe),
+  EvoluionDe \== null,
+  tiene_pokemon_basico(Cola).
+% ===============================================
 
   
 
@@ -78,5 +115,23 @@ createTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard) :-
 % ==================================================================
 % RF06: createDeck/2
 % Meta Primaria: createDeck(Cards, Deck).
-% Meta Secundaria: 
+% Meta Secundaria: Unificar la variable Deck con Cards solo si Cards tiene un pokemon básico, no tiene ninguna carta que no sea de tipo energy con más de 4 copias y su largo es igual a 60.
 % ==================================================================
+createDeck(Cards, Deck):-
+  length(Cards, 60),
+  validar_limite_copias(Cards, Cards),
+  tiene_pokemon_basico(Cards),
+  Deck = Cards.
+
+% ==================================================================
+% RF07: shuffleDeck/3
+% Meta Primaria: shuffleDeck(DeckIn, Seed, DeckOut).
+% Meta Secundaria:
+% ==================================================================
+
+
+
+
+
+
+
