@@ -74,6 +74,28 @@ tiene_pokemon_basico([Cabeza | Cola]):-
   tiene_pokemon_basico(Cola).
 % ===============================================
 
+% ===============================================
+% randomPuro/2: Genera el siguiente número pseudoaleatorio según el enunciado.
+% Meta Primaria: randomPuro(Xn, Xn1).
+
+randomPuro(Xn, Xn1):- 
+  Xn1 is (1103515245 * Xn + 12345) mod 2147483648.
+% ===============================================
+
+% ===============================================
+% extraerCarta/4: Encuentra una carta por su índice, la extrae y devuelve la lista restante.
+% Meta Primaria: extraer_carta(Indice, ListaOriginal, CartaExtraida, ListaRestante).
+
+% Caso Base: El índice es 0, extraemos la cabeza y el resto es la cola.
+extraerCarta(0, [Cabeza | Cola], Cabeza, Cola).
+
+% Caso Recursivo: El índice es mayor a 0, avanzamos en la cola restando 1 al índice.
+extraerCarta(Index, [Cabeza | Cola], Elemento, [Cabeza | RestoCola]) :-
+    Index > 0,
+    NextIndex is Index - 1,
+    extraerCarta(NextIndex, Cola, Elemento, RestoCola).
+
+% ===============================================
   
 
 
@@ -126,8 +148,29 @@ createDeck(Cards, Deck):-
 % ==================================================================
 % RF07: shuffleDeck/3
 % Meta Primaria: shuffleDeck(DeckIn, Seed, DeckOut).
-% Meta Secundaria:
+% Meta Secundaria: Generar índice aleatorio, extraer carta, barajar el resto.
+% ======================================================================
+% Caso Base: Mazo vacío.
+shuffleDeck([], _, []).
+
+% Caso Recursivo: Mazo con cartas.
+shuffleDeck(DeckIn, Seed, DeckOut) :-
+    randomPuro(Seed, NuevaSemilla),
+    length(DeckIn, Largo),
+    Largo > 0,
+    Index is NuevaSemilla mod Largo,
+    extraerCarta(Index, DeckIn, CartaExtraida, DeckRestante),
+    shuffleDeck(DeckRestante, NuevaSemilla, DeckOutRestante),
+    DeckOut = [CartaExtraida | DeckOutRestante].
+
 % ==================================================================
+% RF08: initGame/4
+% Meta Primaria: initGame(Deck1, Deck2, Seed, Game).
+% Meta Secundaria: 
+% ======================================================================
+  
+  
+  
 
 
 
