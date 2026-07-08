@@ -111,11 +111,24 @@ extraer_n_cartas(N, [Cabeza | Cola], [Cabeza | RestoExtraidas], MazoRestante) :-
 % ===============================================
 
 % ===============================================
-% prepararJugador/6: 
-% Meta Primaria: prepararJugador(MazoOriginal, Semilla, ManoFinal, PremiosFinales, MazoSobrante, NuevaSemilla).
+% preparar_jugador/6: Baraja, extrae 7 cartas y 6 premios.
+% Meta Primaria: preparar_jugador(MazoOriginal, SemillaIn, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut).
 
-prepararJugador(MazoOriginal, Semilla, ManoFinal, PremiosFinales, MazoSobrante, NuevaSemilla):-
-  
+% Caso 1: La mano de 7 cartas tiene un Pokémon básico.
+preparar_jugador(MazoOriginal, SemillaIn, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut) :-
+    shuffleDeck(MazoOriginal, SemillaIn, MazoBarajado),
+    extraer_n_cartas(7, MazoBarajado, ManoFinal, MazoIntermedio),
+    tiene_pokemon_basico(ManoFinal),
+    extraer_n_cartas(6, MazoIntermedio, PremiosFinales, MazoSobrante),
+    randomPuro(SemillaIn, SemillaOut).
+
+% Caso 2: La mano de 7 cartas no tiene básico.
+preparar_jugador(MazoOriginal, SemillaIn, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut) :-
+    shuffleDeck(MazoOriginal, SemillaIn, MazoBarajado),
+    extraer_n_cartas(7, MazoBarajado, ManoPosible, _),
+    \+ tiene_pokemon_basico(ManoPosible),
+    randomPuro(SemillaIn, NuevaSemilla),
+    preparar_jugador(MazoOriginal, NuevaSemilla, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut).
 % ===============================================
   
 
