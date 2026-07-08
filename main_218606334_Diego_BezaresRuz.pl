@@ -94,7 +94,28 @@ extraerCarta(Index, [Cabeza | Cola], Elemento, [Cabeza | RestoCola]) :-
     Index > 0,
     NextIndex is Index - 1,
     extraerCarta(NextIndex, Cola, Elemento, RestoCola).
+% ===============================================
 
+% ===============================================
+% extraer_n_cartas/4: Extrae N cartas de la parte superior del mazo y devuelve el resto.
+% Meta Primaria: extraer_n_cartas(N, MazoOriginal, CartasExtraidas, MazoRestante).
+
+% Caso Base: Extraer 0 cartas deja la lista vacía y el mazo intacto.
+extraer_n_cartas(0, Mazo, [], Mazo).
+
+% Caso Recursivo: Extraer 1 carta de la cabeza, restar N, y seguir extrayendo.
+extraer_n_cartas(N, [Cabeza | Cola], [Cabeza | RestoExtraidas], MazoRestante) :-
+    N > 0,
+    N2 is N - 1,
+    extraer_n_cartas(N2, Cola, RestoExtraidas, MazoRestante).
+% ===============================================
+
+% ===============================================
+% prepararJugador/6: 
+% Meta Primaria: prepararJugador(MazoOriginal, Semilla, ManoFinal, PremiosFinales, MazoSobrante, NuevaSemilla).
+
+prepararJugador(MazoOriginal, Semilla, ManoFinal, PremiosFinales, MazoSobrante, NuevaSemilla):-
+  
 % ===============================================
   
 
@@ -154,7 +175,7 @@ createDeck(Cards, Deck):-
 shuffleDeck([], _, []).
 
 % Caso Recursivo: Mazo con cartas.
-shuffleDeck(DeckIn, Seed, DeckOut) :-
+shuffleDeck(DeckIn, Seed, DeckOut):-
     randomPuro(Seed, NuevaSemilla),
     length(DeckIn, Largo),
     Largo > 0,
