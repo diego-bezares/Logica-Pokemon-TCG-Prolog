@@ -1,4 +1,10 @@
-
+:- module(tda_juego, [initJuego,
+                     getJugador1,
+                     getJugador2,
+                     getTurnoActual,
+                     setJugador1,
+                     setJugador2,
+                     setTurnoActual]).
 
 % =============================
 % ========== TDA JUEGO ========
