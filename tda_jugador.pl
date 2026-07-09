@@ -1,4 +1,4 @@
-:- modulo(tda_jugador, [initJugador,
+:- module(tda_jugador, [initJugador,
                        getMazoJugador,
                        getManoJugador,
                        getPokeActivoJugador,
