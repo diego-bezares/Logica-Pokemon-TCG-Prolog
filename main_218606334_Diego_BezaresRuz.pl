@@ -1,7 +1,8 @@
-
+% ==================================================================
 % ================== FUNCIONES AUXILIARES ==========================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % contar_copias/3: Cuenta cuantas cartas hay en una lista con el mismo nombre.
 % Meta Primaria: contar_copias(NombreBuscado, ListaCartas, Cantidad).
 
@@ -20,9 +21,9 @@ contar_copias(NombreBuscado, [Cabeza | Cola], Cantidad):-
   getNombreCard(Cabeza, Nombre),
   NombreBuscado \== Nombre,
   contar_copias(NombreBuscado, Cola, Cantidad).
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % validar_limite_copias/2: Valida que la cantidad de copias de una carta de tipo entrenador
 % o pokemon se menor o igual a 4.
 % Meta Primaria: validar_limite_copias(Mazo, CartasARevisar).
@@ -45,9 +46,9 @@ validar_limite_copias(Mazo, [Cabeza | Cola]):-
   contar_copias(NombreBuscado, Mazo, Copias),
   Copias =< 4,
   validar_limite_copias(Mazo, Cola).
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % tiene_pokemon_basico/1: Valida si en una lista de cartas existe al menos una de tipo pokemon
 % con el campo EvolucionDe vacio (null).
 % Meta Primaria: tiene_pokemon_basico(ListaCartas).
@@ -72,17 +73,17 @@ tiene_pokemon_basico([Cabeza | Cola]):-
   getEvolucionDePoke(Cabeza; EvolucionDe),
   EvoluionDe \== null,
   tiene_pokemon_basico(Cola).
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % randomPuro/2: Genera el siguiente número pseudoaleatorio según el enunciado.
 % Meta Primaria: randomPuro(Xn, Xn1).
 
 randomPuro(Xn, Xn1):- 
   Xn1 is (1103515245 * Xn + 12345) mod 2147483648.
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % extraerCarta/4: Encuentra una carta por su índice, la extrae y devuelve la lista restante.
 % Meta Primaria: extraer_carta(Indice, ListaOriginal, CartaExtraida, ListaRestante).
 
@@ -94,9 +95,9 @@ extraerCarta(Index, [Cabeza | Cola], Elemento, [Cabeza | RestoCola]) :-
     Index > 0,
     NextIndex is Index - 1,
     extraerCarta(NextIndex, Cola, Elemento, RestoCola).
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % extraer_n_cartas/4: Extrae N cartas de la parte superior del mazo y devuelve el resto.
 % Meta Primaria: extraer_n_cartas(N, MazoOriginal, CartasExtraidas, MazoRestante).
 
@@ -108,9 +109,9 @@ extraer_n_cartas(N, [Cabeza | Cola], [Cabeza | RestoExtraidas], MazoRestante) :-
     N > 0,
     N2 is N - 1,
     extraer_n_cartas(N2, Cola, RestoExtraidas, MazoRestante).
-% ===============================================
+% ==================================================================
 
-% ===============================================
+% ==================================================================
 % preparar_jugador/6: Baraja, extrae 7 cartas y 6 premios.
 % Meta Primaria: preparar_jugador(MazoOriginal, SemillaIn, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut).
 
@@ -129,12 +130,52 @@ preparar_jugador(MazoOriginal, SemillaIn, ManoFinal, PremiosFinales, MazoSobrant
     \+ tiene_pokemon_basico(ManoPosible),
     randomPuro(SemillaIn, NuevaSemilla),
     preparar_jugador(MazoOriginal, NuevaSemilla, ManoFinal, PremiosFinales, MazoSobrante, SemillaOut).
-% ===============================================
+% ==================================================================
+
+% ==================================================================
+% remover_carta/3: Elimina un elemento de una lista y devuelve la lista sin el elemento.
+% Meta Primaria: remover_carta(Elemento, Lista, ListaSinElemento).
+
+remover_carta(Elemento, [Elemento | Cola], Cola).
+remover_carta(Elemento, [Cabeza | Cola], [Cabeza | ColaRestante]) :-
+    Elemento \== Cabeza,
+    remover_carta(Elemento, Cola, ColaRestante).
+% ==================================================================
+
+% ==================================================================
+% jugar_carta_banca/3:
+% Meta Primaria: jugar_carta_banca(JugadorIn, Carta, JugadorOut).
+
+jugar_carta_banca(JugadorIn, Carta, JugadorOut):-
+  % Se cargan todos los datos necesarios.
+  getMazoJugador(JugadorIn, Mazo),
+  getManoJugador(JugadorIn, Mano),
+  getPokeActivoJugador(JugadorIn, PokeActivo),
+  getBancaJugador(JugadorIn, Banca),
+  getDescarteJugador(JugadorIn, Descarte),
+  getPremiosJugador(JugadorIn, Premios),
+  getTypeCard(Carta, Tipo),
+  getEvolucioDePoke(Carta, EvolucionDe),
+
+  % Se hacen las validaciones.
+  Tipo == pokemon,  % La carta a jugar es un pokemon.
+  EvolucionDe == null,  % El pokemon es básico.
+  length(Banca, L), L < 5, % Hay al menos un espacio en la banca.
+
+  % Procesamiento.
+  remover_carta(Carta, Mano, NuevaMano),
+  NuevaBanca = [Carta | Banca],
+  JugadorOut = [Mazo, NuevaMano, PokeActivo, NuevaBanca, Descarte, Premios].
+% ==================================================================
+
+
+% ============================ O ===================================
   
 
 
-
+% ==================================================================
 % ================== REQUERIMIENTOS FUNCIONALES ====================
+% ==================================================================
 
 % ==================================================================
 % RF02: createEnergyCard/4
@@ -155,7 +196,8 @@ createAttack(Cost, Nombre, Descripcion, Dano, Predicado, Attack) :-
 % ==================================================================
 % RF04: createPokemonCard/13
 % Meta Primaria: createPokemonCard(Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, Resistencia, CosteRetirada, EsEx, Habilidad, Ataques, PokemonCard).
-% Meta Secundaria: Unificar la variable PokemonCard con la lista [pokemon, Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, Resistencia, CosteRetirada, EsEx, Habilidad, Ataques] a través de uno de los constructores del tda-card.
+% Meta Secundaria: Unificar la variable PokemonCard con la lista [pokemon, Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, Resistencia, CosteRetirada, EsEx, Habilidad, Ataques]
+%                  a través de uno de los constructores del tda-card.
 % ==================================================================
 createPokemonCard(Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, Resistencia, CosteRetirada, EsEx, Habilidad, Ataques, PokemonCard) :-
   initPokemonCard(Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, Resistencia, CosteRetirada, EsEx, Habilidad, Ataques, PokemonCard).
@@ -163,7 +205,8 @@ createPokemonCard(Expansion, Numero, Nombre, EvolucionDe, Ps, Tipo, Debilidad, R
 % ==================================================================
 % RF05: createTrainerCard/7
 % Meta Primaria: createTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard).
-% Meta Secundaria: Unificar la variable TrainerCard con la lista [trainer, Expansion, Numero, Nombre, Tipo, Texto, P] a través de uno de los constructores del tda-card.
+% Meta Secundaria: Unificar la variable TrainerCard con la lista [trainer, Expansion, Numero, Nombre, Tipo, Texto, P] 
+%                  a través de uno de los constructores del tda-card.
 % ==================================================================
 createTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard) :-
   initTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard).
@@ -171,7 +214,8 @@ createTrainerCard(Expansion, Numero, Nombre, Tipo, Texto, P, TrainerCard) :-
 % ==================================================================
 % RF06: createDeck/2
 % Meta Primaria: createDeck(Cards, Deck).
-% Meta Secundaria: Unificar la variable Deck con Cards solo si Cards tiene un pokemon básico, no tiene ninguna carta que no sea de tipo energy con más de 4 copias y su largo es igual a 60.
+% Meta Secundaria: Unificar la variable Deck con Cards solo si Cards tiene un pokemon básico, 
+%                  no tiene ninguna carta que no sea de tipo energy con más de 4 copias y su largo es igual a 60.
 % ==================================================================
 createDeck(Cards, Deck):-
   length(Cards, 60),
@@ -179,11 +223,11 @@ createDeck(Cards, Deck):-
   tiene_pokemon_basico(Cards),
   Deck = Cards.
 
-% ==================================================================
+% ===================================================================
 % RF07: shuffleDeck/3
 % Meta Primaria: shuffleDeck(DeckIn, Seed, DeckOut).
 % Meta Secundaria: Generar índice aleatorio, extraer carta, barajar el resto.
-% ======================================================================
+% ===================================================================
 % Caso Base: Mazo vacío.
 shuffleDeck([], _, []).
 
@@ -197,17 +241,46 @@ shuffleDeck(DeckIn, Seed, DeckOut):-
     shuffleDeck(DeckRestante, NuevaSemilla, DeckOutRestante),
     DeckOut = [CartaExtraida | DeckOutRestante].
 
-% ==================================================================
+% ===================================================================
 % RF08: initGame/4
 % Meta Primaria: initGame(Deck1, Deck2, Seed, Game).
-% Meta Secundaria: 
-% ======================================================================
-  
-  
-  
+% Meta Secundaria: Preparar al jugador 1, preparar al jugador 2, generar 
+%                  una semilla final para la moneda, calcular el turno inicial 
+%                  y unificar todas las estructuras en el TDA Juego.
+% ===================================================================
+initGame(Deck1, Deck2, Seed, Game):-
+  preparar_jugador(Deck1, Seed, Mano1, Premios1, MazoSobrante1, Seed2),
+  preparar_jugador(Deck2, Seed2, Mano2, Premios2, MazoSobrante2, Seed3),
+  randomPuro(Seed3, SeedMoneda),
+  Turno is (SeedMoneda mod 2) + 1,
+  J1 = [MazoSobrante1, Mano1, null, [], [], Premios1],
+  J2 = [MazoSobrante2, Mano2, null, [], [], Premios2],
+  Game = [J1, J2, Turno].
+
+% ===================================================================
+% RF09: printGame/
+% Meta Primaria: 
+% Meta Secundaria:
+% ===================================================================
 
 
+% ===================================================================
+% RF10: playToBench/3
+% Meta Primaria: playToBench(GameIn, Carta, GameOut).
+% Meta Secundaria: Actualiza la banca del jugador 1 o jugador 2, dependiendo del
+%                  turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+playToBench([J1, J2, Turno], Carta, GameOut):-
+  Turno == 1,
+  jugar_carta_banca(J1, Carta, NuevoJ1),
+  GameOut = [NuevoJ1, J2, Turno].
 
+% Es el turno del jugador 2.
+playToBench([J1, J2, Turno], Carta, GameOut):-
+  Turno == 2,
+  jugar_carta_banca(J2, Carta, NuevoJ2),
+  GameOut = [J1, NuevoJ2, Turno].
 
 
 
