@@ -39,6 +39,13 @@ getEnergias([_, _, _, Energias, _, _], Energias).
 getDano([_, _, _, _, Dano, _], Dano).
 getEstado([_, _, _, _, _, Estado], Estado).
 
+  
+
+
+
+
+
+
 
 
 
