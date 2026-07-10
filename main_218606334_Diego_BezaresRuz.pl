@@ -25,7 +25,7 @@ contar_copias(NombreBuscado, [Cabeza | Cola], Cantidad):-
 
 % ==================================================================
 % validar_limite_copias/2: Valida que la cantidad de copias de una carta de tipo entrenador
-% o pokemon se menor o igual a 4.
+%                          o pokemon se menor o igual a 4.
 % Meta Primaria: validar_limite_copias(Mazo, CartasARevisar).
 
 % Caso Base: CartasARevisar es vacio.
@@ -38,7 +38,7 @@ validar_limite_copias(Mazo, [Cabeza | Cola]):-
   validar_limite_copias(Mazo, Cola).
 
 % Caso Recursivo 2: La Cabeza de CartasARevisar no es una carta tipo energía y su límite de copias
-% es menor o igual a 4.
+%                   es menor o igual a 4.
 validar_limite_copias(Mazo, [Cabeza | Cola]):-
   getTypeCard(Cabeza, Tipo),
   Tipo \== energy,
@@ -50,7 +50,7 @@ validar_limite_copias(Mazo, [Cabeza | Cola]):-
 
 % ==================================================================
 % tiene_pokemon_basico/1: Valida si en una lista de cartas existe al menos una de tipo pokemon
-% con el campo EvolucionDe vacio (null).
+%                         con el campo EvolucionDe vacio (null).
 % Meta Primaria: tiene_pokemon_basico(ListaCartas).
 
 % Caso Base Positivo: La cabeza de la lista es un pokemon y básico.
@@ -143,17 +143,12 @@ remover_carta(Elemento, [Cabeza | Cola], [Cabeza | ColaRestante]) :-
 % ==================================================================
 
 % ==================================================================
-% jugar_carta_banca/3:
+% jugar_carta_banca/3: Hace las validaciones correspondientes para finalmente
+%                      poner en juego una carta (TDA CARD) en la banca (TDA CARTAENJUEGO).
 % Meta Primaria: jugar_carta_banca(JugadorIn, Carta, JugadorOut).
 
-jugar_carta_banca(JugadorIn, Carta, JugadorOut):-
+jugar_carta_banca([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], Carta, JugadorOut):-
   % Se cargan todos los datos necesarios.
-  getMazoJugador(JugadorIn, Mazo),
-  getManoJugador(JugadorIn, Mano),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getBancaJugador(JugadorIn, Banca),
-  getDescarteJugador(JugadorIn, Descarte),
-  getPremiosJugador(JugadorIn, Premios),
   getTypeCard(Carta, Tipo),
   getEvolucioDePoke(Carta, EvolucionDe),
 
@@ -164,9 +159,113 @@ jugar_carta_banca(JugadorIn, Carta, JugadorOut):-
 
   % Procesamiento.
   remover_carta(Carta, Mano, NuevaMano),
-  NuevaBanca = [Carta | Banca],
+  % Se obtienen los datos necesarios para crear el TDA CartaEnJuego
+  getNombreCard(Carta, Nombre),
+  Id = [Nombre, L],
+  initCartaEnJuego(Id, Carta, [], [], 0, normal, NuevaCartaEnJuego)
+
+  % Se unifica todo en la variable JugadorOut.
+  NuevaBanca = [NuevaCartaEnJuego | Banca],
   JugadorOut = [Mazo, NuevaMano, PokeActivo, NuevaBanca, Descarte, Premios].
 % ==================================================================
+
+% ==================================================================
+% ejecutar_cambio_activo/3: Pone una carta en banca como pokemon activo.
+% Meta Primaria: ejecutar_cambio_activo(JugadorIn, CartaEnBanca, JugadorOut).
+
+% Regla 1: El campo PokeActivo es vacio.
+ejecutar_cambio_activo([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], CartaEnBanca, JugadorOut):-
+  PokeActivo == null,
+  member(CartaEnBanca, Banca),
+  remover_carta(CartaEnBanca, Banca, NuevaBanca),
+  JugadorOut = [Mazo, Mano, CartaEnBanca, NuevaBanca, Descarte, Premios].
+
+% Regla 2: El campo PokeActivo no es vacio.
+ejecutar_cambio_activo([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], CartaEnBanca, JugadorOut):-
+  PokeActivo \== null,
+  member(CartaEnBanca, Banca),
+  
+  getCartaBase(PokeActivo, CartaBase),
+  getCosteRetiradaPoke(CartaBase, CosteRetirada),
+  getEnergias(PokeActivo, Energias),
+  
+  length(Energias, L), L >= CosteRetirada,
+  extraer_n_cartas(CosteRetirada, Energias, EnergiasPagadas, EnergiasRestantes),
+  append(EnergiasPagadas, Descarte, NuevoDescarte),
+
+  getId(PokeActivo, Id),
+  getCartasAsociadas(PokeActivo, CartasAsociadas),
+  getDano(PokeActivo, Dano),
+  getEstado(PokeActivo, Estado),
+
+  PokeActivoActualizado = [Id, CartaBase, CartasAsociadas, EnergiasRestantes, Dano, Estado],
+
+  remover_carta(CartaEnBanca, Banca, BancaIntermedia),
+  NuevaBanca = [PokeActivoActualizado | BancaIntermedia],
+  
+  JugadorOut = [Mazo, Mano, CartaEnBanca, NuevaBanca, NuevoDescarte, Premios].
+% ==================================================================
+
+% ==================================================================
+% robar_carta_jugador/3: Pone una carta del mazo en la mano del jugador.
+% Meta Primaria: robar_carta_jugador(JugadorIn, CartaRobada, JugadorOut).
+
+robar_carta_jugador([[CartaRobada | MazoRestante], Mano, PokeActivo, Banca, Descarte, Premios], CartaRobada, JugadorOut):-
+  NuevaMano = [CartaRobada | Mano],
+  JugadorOut = [MazoRestante, NuevaMano, PokeActivo, Banca, Descarte, Premios].
+% ==================================================================
+
+% ==================================================================
+% unir_energia_jugador/4: Agrega una carta de energia a la lista de energias
+%                         de una carta en juego dependiendo si es un pokemon activo
+%                         o una carta en banca.
+% Meta Primaria: unir_energia_jugador(JugadorIn, PokemonObjetivo, CartaEnergia, JugadorOut).
+
+% Regla 1: El Pokemon Objetivo es el PokeActivo.
+unir_energia_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], PokemonObjetivo, CartaEnergia, JugadorOut):-
+  PokeActivo \== null,
+  PokeActivo == PokemonObjetivo,
+  getTypeCard(CartaEnergia, Tipo),
+  Tipo == energy,
+
+  remover_carta(CartaEnergia, Mano, NuevaMano),
+
+  getEnergias(PokeActivo, Energias),
+  NuevasEnergias = [CartaEnergia | Energias],
+
+  getId(PokeActivo, Id),
+  getCartaBase(PokeActivo, CartaBase),
+  getCartasAsociadas(PokeActivo, CartasAsociadas),
+  getDano(PokeActivo, Dano),
+  getEstado(PokeActivo, Estado),
+
+  PokeActivoActualizado = [Id, CartaBase, CartasAsociadas, NuevasEnergias, Dano, Estado],
+  JugadorOut = [Mazo, NuevaMano, PokeActivoActualizado, Banca, Descarte, Premios].
+
+% Regla 2: El Pokemon Objetivo está en la banca.
+unir_energia_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], PokemonObjetivo, CartaEnergia, JugadorOut):-
+  member(PokemonObjetivo, Banca),
+  getTypeCard(CartaEnergia, Tipo),
+  Tipo == energy,
+
+  remover_carta(CartaEnergia, Mano, NuevaMano),
+  remover_carta(PokemonObjetivo, Banca, BancaIntermedia),
+
+  getEnergias(PokemonObjetivo, Energias),
+  NuevasEnergias = [CartaEnergia | Energias],
+
+  getId(PokemonObjetivo, Id),
+  getCartaBase(PokemonObjetivo, CartaBase),
+  getCartasAsociadas(PokemonObjetivo, CartasAsociadas),
+  getDano(PokemonObjetivo, Dano),
+  getEstado(PokemonObjetivo, Estado),
+
+  PokeActualizado = [Id, CartaBase, CartasAsociadas, NuevasEnergias, Dano, Estado],
+  NuevaBanca = [PokeActualizado | BancaIntermedia],
+  JugadorOut = [Mazo, NuevaMano, PokeActivo, NuevaBanca, Descarte, Premios].
+% ==================================================================
+
+
 
 
 % ============================ O ===================================
@@ -282,6 +381,58 @@ playToBench([J1, J2, Turno], Carta, GameOut):-
   jugar_carta_banca(J2, Carta, NuevoJ2),
   GameOut = [J1, NuevoJ2, Turno].
 
+% ===================================================================
+% RF11: changeActivePokemon/3
+% Meta Primaria: changeActivePokemon(GameIn, CartaBanca, GameOut).
+% Meta Secundaria: Actualiza el pokemon activo del jugador 1 o jugador 2
+%                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+changeActivePokemon([J1, J2, Turno], CartaEnBanca, GameOut):-
+  Turno == 1,
+  ejecutar_cambio_activo(J1, CartaEnBanca, NuevoJ1),
+  GameOut = [NuevoJ1, J2, Turno].
 
+% Es el turno del jugador 2.
+changeActivePokemon([J1, J2, Turno], CartaEnBanca, GameOut):-
+  Turno == 2,
+  ejecutar_cambio_activo(J2, CartaEnBanca, NuevoJ2),
+  GameOut = [J1, NuevoJ2, Turno].
+
+% ===================================================================
+% RF12: drawCardFromDeck/3
+% Meta Primaria: drawCardFromDeck(GameIn, CardObtained, GameOut).
+% Meta Secundaria: Actualiza la mano del jugador 1 o jugador 2
+%                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+drawCardFromDeck([J1, J2, Turno], CardObtained, GameOut):-
+  Turno == 1,
+  robar_carta_jugador(J1, CardObtained, NuevoJ1),
+  GameOut = [NuevoJ1, J2, Turno].
+
+% Es el turno del jugador 2.
+drawCardFromDeck([J1, J2, Turno], CardObtained, GameOut):-
+  Turno == 2,
+  robar_carta_jugador(J2, CardObtained, NuevoJ2),
+  GameOut = [J1, NuevoJ2, Turno].
+
+% ===================================================================
+% RF13: useEnergyCard/4
+% Meta Primaria: useEnergyCard(GameIn, CartaEnergia, PokemonObjetivo, GameOut).
+% Meta Secundaria: Actualiza la energias de una carta en juego del jugador 1 o jugador 2
+%                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+useEnergyCard([J1, J2, Turno], CartaEnergia, PokemonObjetivo, GameOut):-
+  Turno == 1,
+  unir_energia_jugador(J1, CartaEnergia, PokemonObjetivo, NuevoJ1),
+  GameOut = [NuevoJ1, J2, Turno].
+
+% Es el turno del jugador 2.
+useEnergyCard([J1, J2, Turno], CartaEnergia, PokemonObjetivo, GameOut):-
+  Turno == 2,
+  unir_energia_jugador(J2, CartaEnergia, PokemonObjetivo, NuevoJ2),
+  GameOut = [J1, NuevoJ2, Turno].
 
 
