@@ -265,6 +265,22 @@ unir_energia_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], Pokemon
   JugadorOut = [Mazo, NuevaMano, PokeActivo, NuevaBanca, Descarte, Premios].
 % ==================================================================
 
+% ==================================================================
+% buscar_ataque/3: Busca un TDA attack dentro de una lista de TDAs attack basándose
+%                  en el nombre del ataque.
+% Meta Primaria: buscar_ataque(NombreBuscado, ListaAtaques, AtaqueEncontrado).
+
+% Caso Base: El ataque en la cabeza coincide con el nombre.
+buscar_ataque(NombreBuscado, [Ataque | _], Ataque):-
+    getNombreAttack(Ataque, NombreAtaque),
+    NombreBuscado == NombreAtaque.
+
+% Caso Recursivo: No coincide, buscar en la cola.
+buscar_ataque(NombreBuscado, [Ataque | Cola], AtaqueEncontrado):-
+    getNombreAttack(Ataque, NombreAtaque),
+    NombreBuscado \== NombreAtaque,
+    buscar_ataque(NombreBuscado, Cola, AtaqueEncontrado).
+% ==================================================================
 
 
 
