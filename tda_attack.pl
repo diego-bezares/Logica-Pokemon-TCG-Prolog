@@ -2,6 +2,7 @@
                        getCostAttack,
                        getNombreAttack,
                        getDescripcionAttack,
+                       getDanoAttack,
                        getPredicadoAttack]).
 
 
@@ -20,14 +21,15 @@
 
 
 % ========= CONSTRUCTOR =======
-initAttack(Cost, Nombre, Descripcion, P, Attack):-
-  Attack = [Cost, Nombre, Descripcion, P].
+initAttack(Cost, Nombre, Descripcion, Dano, P, Attack):-
+  Attack = [Cost, Nombre, Descripcion, Dano, P].
 
 % ========= SELECTORES ========
-getCostAttack([Cost, _, _, _], Cost).
-getNombreAttack([_, Nombre, _, _], Nombre).
-getDescripcionAttack([_, _, Descripcion, _], Descripcion).
-getPredicadoAttack([_, _, _, P], P).
+getCostAttack([Cost, _, _, _, _], Cost).
+getNombreAttack([_, Nombre, _, _, _], Nombre).
+getDescripcionAttack([_, _, Descripcion, _, _], Descripcion).
+getDanoAttack([_, _, _, Dano, _], Dano).
+getPredicadoAttack([_, _, _, _, P], P).
 
 
 
