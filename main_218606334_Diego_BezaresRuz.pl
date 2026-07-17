@@ -453,16 +453,47 @@ formatear_lista_banca([Poke | Resto], StrOut) :-
 
 formatear_lista_nombres([], "Vacia").
 formatear_lista_nombres([Carta], StrOut) :-
-    get_card_nombre(Carta, StrOut).
+    getNombreCard(Carta, StrOut).
 formatear_lista_nombres([Carta | Resto], StrOut) :-
     Resto \== [],
-    get_card_nombre(Carta, Nombre),
+    getNombreCard(Carta, Nombre),
     formatear_lista_nombres(Resto, StrResto),
     format(string(StrOut), "~w, ~w", [Nombre, StrResto]).
 % ==================================================================
 
 % ==================================================================
-% verificar_knockout/7: 
+% verificar_knockout/6: 
+% Meta Primaria: verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut).
+
+% Regla 1: Sobrevive el defensor.
+verificar_knockout(JugadorDefensaIn, _, DefensorActualizado, JugadorDefensaOut, _):-
+  JugadorDefensaIn = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+  PokeActivo == DefensorActualizado,
+  
+  getCartaBase(DefensorActualizado, CartaBaseD),
+  getPsPoke(CartaBaseD, PsD),
+  getDano(DefensorActualizado, DanoD),
+  DanoD < PsD,
+
+  JugadorDefensaOut = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios].
+
+% Regla 2: Muere el defensor.
+verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
+  JugadorDefensaIn = [MazoD, ManoD, PokeActivoD, BancaD, DescarteD, PremiosD],
+  JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, PremiosA],
+  PokeActivoD == DefensorActualizado,
+  
+  getCartaBase(DefensorActualizado, CartaBaseD),
+  getPsPoke(CartaBaseD, PsD),
+  getDano(DefensorActualizado, DanoD),
+  DanoD >= PsD,
+
+  NuevoDescarteD = [DefensorActualizado | DescarteD],
+  extraer_carta(0, PremiosA, Premio, NuevosPremiosA),
+  NuevaManoA = [Premio | ManoA],
+
+  JugadorDefensaOut = [MazoD, ManoD, null, BancaD, NuevoDescarteD, PremiosD],
+  JugadorAtaqueOut = [MazoA, NuevaManoA, PokeActivoA, BancaA, DescarteA, NuevosPremiosA].
 % ==================================================================
 
 
