@@ -282,6 +282,185 @@ buscar_ataque(NombreBuscado, [Ataque | Cola], AtaqueEncontrado):-
     buscar_ataque(NombreBuscado, Cola, AtaqueEncontrado).
 % ==================================================================
 
+% ==================================================================
+% ejecutar_ataque/4: Valida que el ataque es legal, cobra la energía y aplica el 
+%                    daño crudo (sin calcular debilidades y resistencia).
+% Meta Primaria: ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado).
+
+ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado):-
+  Atacante \== null,
+  Defensor \== null,
+  getCartaBase(Atacante, CartaBaseA),
+  getCartaBase(Defensor, CartaBaseD),
+  getAtaquesPoke(CartaBaseA, AtaquesA),
+  buscar_ataque(NombreAtaque, AtaquesA, AtaqueSeleccionado),
+
+  getCostAttack(AtaqueSeleccionado, CosteA),
+  getEnergias(Atacante, EnergiasA),
+  length(CosteA, LCosteA),
+  length(EnergiasA, LEnergiasA),
+  LEnergiasA >= LCosteA,
+  
+  getTipoPoke(CartaBaseA, TipoAtacante),
+  getDebilidadPoke(CartaBaseD, Debilidad),
+  getResistenciaPoke(CartaBaseD, Resistencia),
+  getDanoAttack(AtaqueSeleccionado, DanoBase),
+  getDano(Defensor, DanoActual),
+  calcular_dano_modificado(TipoAtacante, Debilidad, Resistencia, DanoBase, DanoFinal),
+  NuevoDano is DanoActual - DanoFinal,
+  
+
+  getId(Defensor, Id),
+  getCartasAsociadas(Defensor, CartasAsociadas),
+  getEnergias(Defensor, EnergiasD),
+  getEstado(Defensor, Estado),
+  DefensorActualizado = [Id, CartaBaseD, CartasAsociadas, EnergiasD, NuevoDano, Estado].
+% ==================================================================
+
+% ==================================================================
+% calcular_dano_modificado/5: Aplica la lógica matemática de las resistencias y 
+%                             debilidades a los daños.
+% Meta Primaria: calcular_dano_modificado(TipoAtacante, DebilidadDefensor, ResistenciaDefensor, DanoBase, DanoFinal).
+
+% Regla 1: Debilidad
+calcular_dano_modificado(TipoAtacante, DebilidadDefensor, _, DanoBase, DanoFinal):-
+  DebilidadDefensor \== null,
+  TipoAtacante == DebilidadDefensor,
+  DanoFinal is DanoBase * 2.
+
+% Regla 2.1: Resistencia positiva o 0
+calcular_dano_modificado(TipoAtacante, _, ResistenciaDefensor, DanoBase, DanoFinal):-
+  ResistenciaDefensor \== null,
+  TipoAtacante == ResistenciaDefensor,
+  DanoFinal >= 30.
+  DanoFinal is DanoBase - 30.
+% Regla 2.2: Resistencia negativa
+calcular_dano_modificado(TipoAtacante, _, ResistenciaDefensor, DanoBase, DanoFinal):-
+  ResistenciaDefensor \== null,
+  TipoAtacante == ResistenciaDefensor,
+  DanoFinal < 30,
+  DanoFinal = 0.
+
+% Regla 3: Neutro
+calcular_dano_modificado(TipoAtacante, DebilidadDefensor, ResistenciaDefensor, DanoBase, DanoFinal):-
+  TipoAtacante \== DebilidadDefensor,
+  TipoAtacante \== ResistenciaDefensor,
+  DanoFinal = DanoBase.
+% ==================================================================
+
+% ==================================================================
+% evolucionar_pokemon_jugador/4: 
+% Meta Primaria: evolucionar_pokemon_jugador(JugadorIn, PokemonA_Evolucionar, CartaEvolucion, JugadorOut).
+
+% Regla 1: El Pokemon a evolucionar es el Pokemon activo.
+evolucionar_pokemon_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], PokemonA_Evolucionar, CartaEvolucion, JugadorOut):-
+  PokeActivo \== null,
+  PokeActivo == PokemonA_Evolucionar,
+
+  getCartaBase(PokemonA_Evolucionar, CartaBaseEvo),
+  getNombreCard(CartaBaseEvo, NombreEvo),
+  getEvolucioDePoke(CartaEvolucion, EvolucionDe),
+  NombreEvo == EvolucionDe,
+
+  remover_carta(CartaEvolucion, Mano, NuevaMano),
+
+  getCartasAsociadas(PokemonA_Evolucionar, CartasAsociadas),
+  NuevaCartasAsociadas = [CartaBaseEvo | CartasAsociadas],
+  getId(PokemonA_Evolucionar, Id),
+  getEnergias(PokemonA_Evolucionar, Energias),
+  getDano(PokemonA_Evolucionar, Dano),
+  getEstado(PokemonA_Evolucionar, Estado),
+
+  PokeEvo = [Id, CartaEvolucion, NuevaCartasAsociadas, Energias, Dano, Estado],
+
+  JugadorOut = [Mazo, NuevaMano, PokeEvo, Banca, Descarte, Premios].
+
+% Regla 2: El Pokemon a evolucionar está en la banca.
+evolucionar_pokemon_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], PokemonA_Evolucionar, CartaEvolucion, JugadorOut):-
+  member(PokemonA_Evolucionar, Banca),
+
+  getCartaBase(PokemonA_Evolucionar, CartaBaseEvo),
+  getNombreCard(CartaBaseEvo, NombreEvo),
+  getEvolucioDePoke(CartaEvolucion, EvolucionDe),
+  NombreEvo == EvolucionDe,
+
+  remover_carta(CartaEvolucion, Mano, NuevaMano),
+  remover_carta(PokemonA_Evolucionar, Banca, BancaInter),
+
+  getCartasAsociadas(PokemonA_Evolucionar, CartasAsociadas),
+  NuevaCartasAsociadas = [CartaBaseEvo | CartasAsociadas],
+  getId(PokemonA_Evolucionar, Id),
+  getEnergias(PokemonA_Evolucionar, Energias),
+  getDano(PokemonA_Evolucionar, Dano),
+  getEstado(PokemonA_Evolucionar, Estado),
+
+  PokeEvo = [Id, CartaEvolucion, NuevaCartasAsociadas, Energias, Dano, Estado],
+
+  NuevaBanca = [PokeEvo | BancaInter],
+
+  JugadorOut = [Mazo, NuevaMano, PokeActivo, NuevaBanca, Descarte, Premios].  
+% ==================================================================
+
+% ==================================================================
+% validar_pertenencia_pokemon/2: Falla si la carta no pertenece al activo o a la banca del jugador.
+% Meta Primaria: validar_pertenencia_pokemon(Jugador, PokemonCard).
+
+validar_pertenencia_pokemon([_, _, PokeActivo, Banca, _, _], PokemonCard) :-
+    PokeActivo == PokemonCard.
+
+validar_pertenencia_pokemon([_, _, _, Banca, _, _], PokemonCard) :-
+    member(PokemonCard, Banca).
+% ==================================================================
+
+% ==================================================================
+% formatear_pokemon/2: Transforma un pokemon en un string.
+% Meta Primaria: formatear_pokemon(Pokemon; StrOut).
+
+formatear_pokemon(null, "Ninguno").
+formatear_pokemon(Pokemon, StrOut) :-
+    Pokemon \== null,
+    getCartaBase(Pokemon, CartaBase),
+    getNombreCard(CartaBase, Nombre),
+    getTypeCard(CartaBase, Tipo),
+    getPsPoke(CartaBase, PS),
+    getDebilidadPoke(CartaBase, Debilidad),
+    getResistenciaPoke(CartaBase, Resistencia),
+    getEnergias(Pokemon, Energias),
+    length(Energias, LEnergias),
+    getDano(Pokemon, Dano),
+    getEstado(Pokemon, Estado),
+    format(string(StrOut), "[~w | Tipo: ~w | PS: ~w | Daño: ~w | Energías: ~w | Est: ~w | Deb: ~w | Res: ~w]",
+           [Nombre, Tipo, PS, Dano, LEnergias, Estado, Debilidad, Resistencia]).
+% ==================================================================
+
+% ==================================================================
+% formatear_lista_banca/2: Formatea la lista de la Banca a string recursivamente.
+% Meta Primaria: formatear_lista_banca(ListPoke, StrOut).
+
+formatear_lista_banca([], "Vacia").
+formatear_lista_banca([Poke], StrOut) :-
+    formatear_pokemon(Poke, StrOut).
+formatear_lista_banca([Poke | Resto], StrOut) :-
+    Resto \== [],
+    formatear_pokemon(Poke, StrPoke),
+    formatear_lista_banca(Resto, StrResto),
+    format(string(StrOut), "~w, ~w", [StrPoke, StrResto]).
+% ==================================================================
+
+% ==================================================================
+% formatear_lista_nombres/2: Formatea listas de cartas simples (Mano o Descarte).
+% Meta Primaria: formatear_lista_nombres(Cartas, StrOut).
+
+formatear_lista_nombres([], "Vacia").
+formatear_lista_nombres([Carta], StrOut) :-
+    get_card_nombre(Carta, StrOut).
+formatear_lista_nombres([Carta | Resto], StrOut) :-
+    Resto \== [],
+    get_card_nombre(Carta, Nombre),
+    formatear_lista_nombres(Resto, StrResto),
+    format(string(StrOut), "~w, ~w", [Nombre, StrResto]).
+% ==================================================================
+
 
 
 % ============================ O ===================================
@@ -372,11 +551,50 @@ initGame(Deck1, Deck2, Seed, Game):-
   J2 = [MazoSobrante2, Mano2, null, [], [], Premios2],
   Game = [J1, J2, Turno].
 
-% ===================================================================
-% RF09: printGame/
-% Meta Primaria: 
-% Meta Secundaria:
-% ===================================================================
+% ======================================================================
+% RF09: printGame/2
+% Meta Primaria: printGame(GameIn, StringOut).
+% Meta Secundaria: Desempaquetar TDAs, calcular tamaños de listas, 
+%                    ocultar la mano del rival según el turno y formatear
+%                    todo en un único string sin usar write/display.
+% ======================================================================
+printGame([J1, J2, Turno], StrOut) :-
+    J1 = [Mazo1, Mano1, Activo1, Banca1, Descarte1, Premios1],
+    J2 = [Mazo2, Mano2, Activo2, Banca2, Descarte2, Premios2],
+
+    length(Mazo1, LMazo1), length(Premios1, LPremios1), length(Mano1, LMano1),
+    length(Mazo2, LMazo2), length(Premios2, LPremios2), length(Mano2, LMano2),
+
+    formatear_pokemon(Activo1, StrActivo1),
+    formatear_pokemon(Activo2, StrActivo2),
+    formatear_lista_banca(Banca1, StrBanca1),
+    formatear_lista_banca(Banca2, StrBanca2),
+    formatear_lista_nombres(Descarte1, StrDescarte1),
+    formatear_lista_nombres(Descarte2, StrDescarte2),
+
+    (Turno == 1 ->
+        formatear_lista_nombres(Mano1, StrMano), StrMano1 = StrMano, StrMano2 = "[Oculta]"
+    ;
+        formatear_lista_nombres(Mano2, StrMano), StrMano2 = StrMano, StrMano1 = "[Oculta]"
+    ),
+
+    format(string(StrOut),
+        "=== ESTADO DEL JUEGO ===\n
+        TURNO ACTUAL: Jugador ~w\n\n
+        --- JUGADOR 1 ---\n
+        Mazo: ~w cartas | Premios: ~w | Mano (~w cartas): ~w\n
+        Activo: ~w\n
+        Banca: ~w\n
+        Descarte: ~w\n\n
+        --- JUGADOR 2 ---\n
+        Mazo: ~w cartas | Premios: ~w | Mano (~w cartas): ~w\n
+        Activo: ~w\n
+        Banca: ~w\n
+        Descarte: ~w\n
+        ========================\n",
+        [Turno, 
+         LMazo1, LPremios1, LMano1, StrMano1, StrActivo1, StrBanca1, StrDescarte1,
+         LMazo2, LPremios2, LMano2, StrMano2, StrActivo2, StrBanca2, StrDescarte2]).
 
 
 % ===================================================================
@@ -450,5 +668,145 @@ useEnergyCard([J1, J2, Turno], CartaEnergia, PokemonObjetivo, GameOut):-
   Turno == 2,
   unir_energia_jugador(J2, CartaEnergia, PokemonObjetivo, NuevoJ2),
   GameOut = [J1, NuevoJ2, Turno].
+
+% ===================================================================
+% RF14: evolvePokemon/4
+% Meta Primaria: evolvePokemon(GameIn, PokemonInGameCard, EvolucionCard, GameOut).
+% Meta Secundaria: Actualiza la carta base de una carta en juego del jugador 1 o jugador 2
+%                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+evolvePokemon([J1, J2, Turno], PokemonInGameCard, EvolucionCard, GameOut):-
+  Turno == 1,
+  evolucionar_pokemon_jugador(J1, PokemonInGameCard, EvolucionCard, NuevoJ1),
+  GameOut = [NuevoJ1, J2, Turno].
+
+% Es el turno del jugador 2.
+evolvePokemon([J1, J2, Turno], PokemonInGameCard, EvolucionCard, GameOut):-
+  Turno == 2,
+  evolucionar_pokemon_jugador(J2, PokemonInGameCard, EvolucionCard, NuevoJ2),
+  GameOut = [J1, NuevoJ2, Turno].
+
+% ===================================================================
+% RF15: useTrainerCard/4
+% Meta Primaria: useTrainerCard(GameIn, TrainerCard, PredicateAdditionalArguments, GameOut).
+% Meta Secundaria: Descarta la carta de entrenador de la mano del jugador 1 o jugador 2
+%                  dependiendo del turno actual, además de hacer un llamado al predicado
+%                  asociado a la carta que actualizado el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+useTrainerCard([J1, J2, Turno], TrainerCard, PredicateAdditionalArguments, GameOut):-
+  Turno == 1,
+  J1 = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+  remover_carta(TrainerCard, Mano, NuevaMano),
+  
+  NuevoDescarte = [TrainerCard | Descarte],
+  NuevoJ1 = [Mazo, NuevaMano, PokeActivo, Banca, NuevoDescarte, Premios],
+  GameInter = [NuevoJ1, J2, Turno],
+
+  getPredicadoTrainer(TrainerCard, PredicadoAsociado),
+  append([PredicadoAsociado, GameInter], PredicateAdditionalArguments, ListaParcial),
+  append(ListaParcial, [GameOut], ArgumentosFinales),
+  Goal =.. ArgumentosFinales,
+  call(Goal).
+
+% Es el turno del jugador 2.
+useTrainerCard([J1, J2, Turno], TrainerCard, PredicateAdditionalArguments, GameOut):-
+  Turno == 2,
+  J2 = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+  remover_carta(TrainerCard, Mano, NuevaMano),
+  
+  NuevoDescarte = [TrainerCard | Descarte],
+  NuevoJ2 = [Mazo, NuevaMano, PokeActivo, Banca, NuevoDescarte, Premios],
+  GameInter = [J1, NuevoJ2, Turno],
+
+  getPredicadoTrainer(TrainerCard, PredicadoAsociado),
+  append([PredicadoAsociado, GameInter], PredicateAdditionalArguments, ListaParcial),
+  append(ListaParcial, [GameOut], ArgumentosFinales),
+  Goal =.. ArgumentosFinales,
+  call(Goal).
+
+% ===================================================================
+% RF16: usePokemonAbility/4
+% Meta Primaria: usePokemonAbility(GameIn, PokemonCard, PredicateAdditionalArguments, GameOut).
+% Meta Secundaria: Hace un llamado al predicado asociado a la carta pokemon actualizando el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+usePokemonAbility([J1, J2, Turno], PokemonCard, PredicateAdditionalArguments, GameOut):-
+    Turno == 1,
+    validar_pertenencia_pokemon(J1, PokemonCard),
+    
+    getHabilidadPoke(PokemonCard, Habilidad),
+    GameIn = [J1, J2, Turno],
+    append([Habilidad, GameIn], PredicateAdditionalArguments, ListaParcial),
+    append(ListaParcial, [GameOut], ArgumentosFinales),
+    Goal =.. ArgumentosFinales,
+    call(Goal).
+
+% Es el turno del jugador 2.
+usePokemonAbility([J1, J2, Turno], PokemonCard, PredicateAdditionalArguments, GameOut):-
+    Turno == 2,
+    validar_pertenencia_pokemon(J2, PokemonCard),
+    
+    getHabilidadPoke(PokemonCard, Habilidad),
+    GameIn = [J1, J2, Turno],
+    append([Habilidad, GameIn], PredicateAdditionalArguments, ListaParcial),
+    append(ListaParcial, [GameOut], ArgumentosFinales),
+    Goal =.. ArgumentosFinales,
+    call(Goal).
+  
+% ===================================================================
+% RF17: usePokemonAttack/3
+% Meta Primaria: attack(GameIn, NombreAtaque, GameOut).
+% Meta Secundaria: Actualiza el daño de una carta en juego del jugador 1 o jugador 2
+%                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
+% ===================================================================
+% Es el turno del jugador 1.
+attack([J1, J2, Turno], NombreAtaque, GameOut):-
+  Turno == 1,
+  getPokeActivoJugador(J1, Atacante),
+  getPokeActivoJugador(J2, Defensor),
+  ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado),
+
+  getMazoJugador(J2, Mazo),
+  getManoJugador(J2, Mano),
+  getBancaJugador(J2, Banca),
+  getDescarteJugador(J2, Descarte),
+  getPremiosJugador(J2, Premios),
+  NuevoJ2 = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
+  
+  GameOut = [J1, NuevoJ2, Turno].
+
+% Es el turno del jugador 2.
+attack([J1, J2, Turno], NombreAtaque, GameOut):-
+  Turno == 2,
+  getPokeActivoJugador(J1, Defensor),
+  getPokeActivoJugador(J2, Atacante),
+  ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado),
+
+  getMazoJugador(J1, Mazo),
+  getManoJugador(J1, Mano),
+  getBancaJugador(J1, Banca),
+  getDescarteJugador(J1, Descarte),
+  getPremiosJugador(J1, Premios),
+  NuevoJ1 = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
+  
+  GameOut = [NuevoJ1, J2, Turno].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
 
