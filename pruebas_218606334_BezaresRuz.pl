@@ -82,11 +82,9 @@ simular_partida :-
     
     % 4. TURNO 1 (Jugador 1: Baja a Pikachu y pasa)
     playToBench(J_Init, Pikachu, J_1),
-    % Extraemos a Pikachu de la banca dinámicamente para subirlo
-    J_1 = [_, _, _, [PikaBanca|_], _, _],
+    J_1 = [J1_A, _, _], J1_A = [_, _, _, [PikaBanca|_], _, _],
     changeActivePokemon(J_1, PikaBanca, J_2),
-    % Extraemos a Pikachu Activo para usarlo de referencia en el ataque vacío
-    J_2 = [_, _, PikaActivoT1, _, _, _],
+    J_2 = [J1_B, _, _], J1_B = [_, _, PikaActivoT1, _, _, _],
     usePokemonAttack(J_2, PikaActivoT1, null, [], J_3), % Pasa turno
     
     % 5. TURNO 2 (Jugador 2: Baja a Voltorb y pasa)
