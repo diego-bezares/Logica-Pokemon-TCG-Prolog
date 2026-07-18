@@ -41,52 +41,22 @@ getDescarteJugador([_, _, _, _, Descarte, _], Descarte).
 getPremiosJugador([_, _, _, _, _, Premios], Premios).
 
 % ======== MODIFICADORES ======
-setMazoJugador(JugadorIn, NuevoMazo, JugadorOut):-
-  getManoJugador(JugadorIn, Mano),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getBancaJugador(JugadorIn, Banca),
-  getDescarteJugador(JugadorIn, Descarte),
-  getPremiosJugador(JugadorIn, Premios),
+setMazoJugador([_, Mano, PokeActivo, Banca, Descarte, Premios], NuevoMazo, JugadorOut):-
   JugadorOut = [NuevoMazo, Mano, PokeActivo, Banca, Descarte, Premios].
 
-setManoJugador(JugadorIn, NuevaMano, JugadorOut):-
-  getMazoJugador(JugadorIn, Mazo),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getBancaJugador(JugadorIn, Banca),
-  getDescarteJugador(JugadorIn, Descarte),
-  getPremiosJugador(JugadorIn, Premios),
+setManoJugador([Mazo, _, PokeActivo, Banca, Descarte, Premios], NuevaMano, JugadorOut):-
   JugadorOut = [Mazo, NuevaMano, PokeActivo, Banca, Descarte, Premios].
 
-setPokeActivoJugador(JugadorIn, NuevoPokeActivo, JugadorOut):-
-  getMazoJugador(JugadorIn, Mazo),
-  getManoJugador(JugadorIn, Mano),
-  getBancaJugador(JugadorIn, Banca),
-  getDescarteJugador(JugadorIn, Descarte),
-  getPremiosJugador(JugadorIn, Premios),
+setPokeActivoJugador([Mazo, Mano, _, Banca, Descarte, Premios], NuevoPokeActivo, JugadorOut):-
   JugadorOut = [Mazo, Mano, NuevoPokeActivo, Banca, Descarte, Premios].
 
-setBancaJugador(JugadorIn, NuevaBanca, JugadorOut):-
-  getMazoJugador(JugadorIn, Mazo),
-  getManoJugador(JugadorIn, Mano),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getDescarteJugador(JugadorIn, Descarte),
-  getPremiosJugador(JugadorIn, Premios),
+setBancaJugador([Mazo, Mano, PokeActivo, _, Descarte, Premios], NuevaBanca, JugadorOut):-
   JugadorOut = [Mazo, Mano, PokeActivo, NuevaBanca, Descarte, Premios].
 
-setDescarteJugador(JugadorIn, NuevoDescarte, JugadorOut):-
-  getMazoJugador(JugadorIn, Mazo),
-  getManoJugador(JugadorIn, Mano),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getBancaJugador(JugadorIn, Banca),
-  getPremiosJugador(JugadorIn, Premios),
+setDescarteJugador([Mazo, Mano, PokeActivo, Banca, _, Premios], NuevoDescarte, JugadorOut):-
   JugadorOut = [Mazo, Mano, PokeActivo, Banca, NuevoDescarte, Premios].
 
-setPremiosJugador(JugadorIn, NuevoPremios, JugadorOut):-
-  getMazoJugador(JugadorIn, Mazo),
-  getManoJugador(JugadorIn, Mano),
-  getPokeActivoJugador(JugadorIn, PokeActivo),
-  getBancaJugador(JugadorIn, Banca),
-  getDescarteJugador(JugadorIn, Descarte),
+setPremiosJugador([Mazo, Mano, PokeActivo, Banca, Descarte, _], NuevoPremios, JugadorOut):-
   JugadorOut = [Mazo, Mano, PokeActivo, Banca, Descarte, NuevoPremios].
 
 
