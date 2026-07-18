@@ -98,4 +98,4 @@ simular_partida :-
     
     write("\n========== GOLPE Y KNOCKOUT ==========\n"),
     printGame(J_Final, SF), write(SF),
-    write("\n>>> SIMULACION EXITOSA: Voltorb eliminado, Jugador 1 cobró 1 premio.\n").Q
+    write("\n>>> SIMULACION EXITOSA: Voltorb eliminado, Jugador 1 cobró 1 premio.\n").
