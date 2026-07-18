@@ -156,7 +156,7 @@ remover_carta(Elemento, [Cabeza | Cola], [Cabeza | ColaRestante]) :-
 jugar_carta_banca([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], Carta, JugadorOut):-
   % Se cargan todos los datos necesarios.
   getTypeCard(Carta, Tipo),
-  getEvolucioDePoke(Carta, EvolucionDe),
+  getEvolucionDePoke(Carta, EvolucionDe),
 
   % Se hacen las validaciones.
   Tipo == pokemon,  % La carta a jugar es un pokemon.
@@ -359,7 +359,7 @@ evolucionar_pokemon_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], 
 
   getCartaBase(PokemonA_Evolucionar, CartaBaseEvo),
   getNombreCard(CartaBaseEvo, NombreEvo),
-  getEvolucioDePoke(CartaEvolucion, EvolucionDe),
+  getEvolucionDePoke(CartaEvolucion, EvolucionDe),
   NombreEvo == EvolucionDe,
 
   remover_carta(CartaEvolucion, Mano, NuevaMano),
@@ -381,7 +381,7 @@ evolucionar_pokemon_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], 
 
   getCartaBase(PokemonA_Evolucionar, CartaBaseEvo),
   getNombreCard(CartaBaseEvo, NombreEvo),
-  getEvolucioDePoke(CartaEvolucion, EvolucionDe),
+  getEvolucionDePoke(CartaEvolucion, EvolucionDe),
   NombreEvo == EvolucionDe,
 
   remover_carta(CartaEvolucion, Mano, NuevaMano),
