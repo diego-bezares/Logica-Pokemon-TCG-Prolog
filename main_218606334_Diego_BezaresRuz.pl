@@ -856,7 +856,7 @@ usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalAr
   call(Goal),
 
   GameInter = [J1Inter, J2Inter, _],
-  J2Inter = [Mazo2, Mano2, Defensor, Banca2, Descarte2, Premios2],
+  J2Inter = [_, _, Defensor, _, _, _],
 
   getCartaBase(Defensor, DefensorBase),
   getTipoPoke(CartaBase, TipoAtacante),
@@ -900,7 +900,7 @@ usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalAr
   call(Goal),
 
   GameInter = [J1Inter, J2Inter, _],
-  J1Inter = [Mazo1, Mano1, Defensor, Banca1, Descarte1, Premios1],
+  J1Inter = [_, _, Defensor, _, _, _],
 
   getCartaBase(Defensor, DefensorBase),
   getTipoPoke(CartaBase, TipoAtacante),
