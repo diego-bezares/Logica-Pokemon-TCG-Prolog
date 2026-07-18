@@ -405,7 +405,7 @@ evolucionar_pokemon_jugador([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], 
 % validar_pertenencia_pokemon/2: Falla si la carta no pertenece al activo o a la banca del jugador.
 % Meta Primaria: validar_pertenencia_pokemon(Jugador, PokemonCard).
 
-validar_pertenencia_pokemon([_, _, PokeActivo, Banca, _, _], PokemonCard) :-
+validar_pertenencia_pokemon([_, _, PokeActivo, _, _, _], PokemonCard) :-
     PokeActivo == PokemonCard.
 
 validar_pertenencia_pokemon([_, _, _, Banca, _, _], PokemonCard) :-
