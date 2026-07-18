@@ -462,12 +462,12 @@ formatear_lista_nombres([Carta | Resto], StrOut) :-
 % ==================================================================
 
 % ==================================================================
-% verificar_knockout/6: 
+% verificar_knockout/5: 
 % Meta Primaria: verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut).
 
 % Regla 1: Sobrevive el defensor.
-verificar_knockout(JugadorDefensaIn, _, DefensorActualizado, JugadorDefensaOut, _):-
-  JugadorDefensaIn = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
+  JugadorDefensaIn = [Mazo, Mano, _, Banca, Descarte, Premios],
   PokeActivo == DefensorActualizado,
   
   getCartaBase(DefensorActualizado, CartaBaseD),
@@ -475,12 +475,13 @@ verificar_knockout(JugadorDefensaIn, _, DefensorActualizado, JugadorDefensaOut, 
   getDano(DefensorActualizado, DanoD),
   DanoD < PsD,
 
-  JugadorDefensaOut = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios].
-
-% Regla 2: Muere el defensor.
+  JugadorDefensaOut = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
+  JugadorAtaqueOut = JugadorAtaqueIn.
+  
+% Regla 2.1: Muere el defensor. Es Pokemon Normal.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [MazoD, ManoD, PokeActivoD, BancaD, DescarteD, PremiosD],
-  JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, PremiosA],
+  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
+  JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio | NuevosPremiosA]],
   PokeActivoD == DefensorActualizado,
   
   getCartaBase(DefensorActualizado, CartaBaseD),
@@ -488,9 +489,39 @@ verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, Jugad
   getDano(DefensorActualizado, DanoD),
   DanoD >= PsD,
 
-  NuevoDescarteD = [DefensorActualizado | DescarteD],
-  extraer_carta(0, PremiosA, Premio, NuevosPremiosA),
+  getEsExPoke(CartaBaseD, EsEx),
+  EsEx == false,
+
+  getCartasAsociadas(DefensorActualizado, Asociadas),
+  getEnergias(DefensorActualizado, Energias),
+  append([CartaBaseD | Asociadas], Energias, CartasDescarte),
+  append(CartasDescarte, DescarteD, NuevoDescarteD),
+
   NuevaManoA = [Premio | ManoA],
+
+  JugadorDefensaOut = [MazoD, ManoD, null, BancaD, NuevoDescarteD, PremiosD],
+  JugadorAtaqueOut = [MazoA, NuevaManoA, PokeActivoA, BancaA, DescarteA, NuevosPremiosA].
+
+% Regla 2.2: Muere el defensor. Es Pokemon Ex.
+verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
+  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
+  JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio1, Premio2 | NuevosPremiosA]],
+  PokeActivoD == DefensorActualizado,
+  
+  getCartaBase(DefensorActualizado, CartaBaseD),
+  getPsPoke(CartaBaseD, PsD),
+  getDano(DefensorActualizado, DanoD),
+  DanoD >= PsD,
+
+  getEsExPoke(CartaBaseD, EsEx),
+  EsEx == true,
+
+  getCartasAsociadas(DefensorActualizado, Asociadas),
+  getEnergias(DefensorActualizado, Energias),
+  append([CartaBaseD | Asociadas], Energias, CartasDescarte),
+  append(CartasDescarte, DescarteD, NuevoDescarteD),
+
+  NuevaManoA = [Premio1, Premio2 | ManoA],
 
   JugadorDefensaOut = [MazoD, ManoD, null, BancaD, NuevoDescarteD, PremiosD],
   JugadorAtaqueOut = [MazoA, NuevaManoA, PokeActivoA, BancaA, DescarteA, NuevosPremiosA].
@@ -630,7 +661,6 @@ printGame([J1, J2, Turno], StrOut) :-
         [Turno, 
          LMazo1, LPremios1, LMano1, StrMano1, StrActivo1, StrBanca1, StrDescarte1,
          LMazo2, LPremios2, LMano2, StrMano2, StrActivo2, StrBanca2, StrDescarte2]).
-
 
 % ===================================================================
 % RF10: playToBench/3
@@ -791,46 +821,108 @@ usePokemonAbility([J1, J2, Turno], PokemonCard, PredicateAdditionalArguments, Ga
     call(Goal).
   
 % ===================================================================
-% RF17: usePokemonAttack/3
-% Meta Primaria: attack(GameIn, NombreAtaque, GameOut).
+% RF17: usePokemonAttack/5
+% Meta Primaria: usePokemonAttack(GameIn, PokemonCard, AttackName, PredicateAdditionalArguments, GameOut).
 % Meta Secundaria: Actualiza el daño de una carta en juego del jugador 1 o jugador 2
 %                  dependiendo del turno actual y unifica el jugador actualizado en el TDA Juego.
 % ===================================================================
-% Es el turno del jugador 1.
-attack([J1, J2, Turno], NombreAtaque, GameOut):-
+% Caso Nulo 1: El nombre de ataque es null. Es el turno del jugador 1.
+usePokemonAttack([J1, J2, Turno], _, null, _, GameOut):-
   Turno == 1,
-  getPokeActivoJugador(J1, Atacante),
-  getPokeActivoJugador(J2, Defensor),
-  ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado),
+  GameOut = [J1, J2, 2].
 
-  getMazoJugador(J2, Mazo),
-  getManoJugador(J2, Mano),
-  getBancaJugador(J2, Banca),
-  getDescarteJugador(J2, Descarte),
-  getPremiosJugador(J2, Premios),
-  NuevoJ2 = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
-  
-  GameOut = [J1, NuevoJ2, Turno].
-
-% Es el turno del jugador 2.
-attack([J1, J2, Turno], NombreAtaque, GameOut):-
+% Caso Nulo 2: El nombre de ataque es null. Es el turno del jugador 2.
+usePokemonAttack([J1, J2, Turno], _, null, _, GameOut):-
   Turno == 2,
-  getPokeActivoJugador(J1, Defensor),
-  getPokeActivoJugador(J2, Atacante),
-  ejecutar_ataque(Atacante, Defensor, NombreAtaque, DefensorActualizado),
+  GameOut = [J1, J2, 1].
 
-  getMazoJugador(J1, Mazo),
-  getManoJugador(J1, Mano),
-  getBancaJugador(J1, Banca),
-  getDescarteJugador(J1, Descarte),
-  getPremiosJugador(J1, Premios),
-  NuevoJ1 = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
+% Caso General 1: Si hay ataque. Es el turno del jugador 1.
+usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalArguments, GameOut):-
+  Turno == 1,
+  validar_pertenencia_pokemon(J1, PokemonCard),
   
-  GameOut = [NuevoJ1, J2, Turno].
+  getCartaBase(PokemonCard, CartaBase),
+  getAtaquesPoke(CartaBase, ListaAtaques),
+  buscar_ataque(AttackName, ListaAtaques, AtaqueEncontrado),
 
+  getCostAttack(AtaqueEncontrado, CosteA),
+  getEnergias(PokemonCard, EnergiasA),
+  length(CosteA, LCosteA),
+  length(EnergiasA, LEnergiasA),
+  LEnergiasA >= LCosteA,
 
+  getPredicadoAttack(AtaqueEncontrado, PredicadoAtaque),
+  GameIn = [J1, J2, Turno],
+  append([PredicadoAtaque, GameIn], PredicateAdditionalArguments, ListaParcial),
+  append(ListaParcial, [GameInter], ArgumentosFinales),
+  Goal =.. ArgumentosFinales,
+  call(Goal),
 
+  GameInter = [J1Inter, J2Inter, _],
+  J2Inter = [Mazo2, Mano2, Defensor, Banca2, Descarte2, Premios2],
 
+  getCartaBase(Defensor, DefensorBase),
+  getTipoPoke(CartaBase, TipoAtacante),
+  getDebilidadPoke(DefensorBase, Debilidad),
+  getResistenciaPoke(DefensorBase, Resistencia),
+  getDanoAttack(AtaqueSeleccionado, DanoBase),
+  getDano(PokeActivo, DanoActual),
+  
+  calcular_dano_modificado(TipoAtacante, Debilidad, Resistencia, DanoBase, DanoFinal),
+  NuevoDano is DanoActual + DanoFinal,
+
+  getId(Defensor, IdD),
+  getCartasAsociadas(Defensor, AsociadasD),
+  getEnergias(Defensor, EnergiasD),
+  getEstado(Defensor, EstadoD),
+  DefensorActualizado = [IdD, DefensorBase, AsociadasD, EnergiasD, NuevoDano, EstadoD],
+
+  verificar_knockout(J2Inter, J1Inter, DefensorActualizado, NuevoJ2, NuevoJ1),
+  GameOut = [NuevoJ1, NuevoJ2, 2].
+
+% Caso General 2: Si hay ataque. Es el turno del jugador 2.
+usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalArguments, GameOut):-
+  Turno == 2,
+  validar_pertenencia_pokemon(J2, PokemonCard),
+  
+  getCartaBase(PokemonCard, CartaBase),
+  getAtaquesPoke(CartaBase, ListaAtaques),
+  buscar_ataque(AttackName, ListaAtaques, AtaqueEncontrado),
+
+  getCostAttack(AtaqueEncontrado, CosteA),
+  getEnergias(PokemonCard, EnergiasA),
+  length(CosteA, LCosteA),
+  length(EnergiasA, LEnergiasA),
+  LEnergiasA >= LCosteA,
+
+  getPredicadoAttack(AtaqueEncontrado, PredicadoAtaque),
+  GameIn = [J1, J2, Turno],
+  append([PredicadoAtaque, GameIn], PredicateAdditionalArguments, ListaParcial),
+  append(ListaParcial, [GameInter], ArgumentosFinales),
+  Goal =.. ArgumentosFinales,
+  call(Goal),
+
+  GameInter = [J1Inter, J2Inter, _],
+  J1Inter = [Mazo1, Mano1, Defensor, Banca1, Descarte1, Premios1],
+
+  getCartaBase(Defensor, DefensorBase),
+  getTipoPoke(CartaBase, TipoAtacante),
+  getDebilidadPoke(DefensorBase, Debilidad),
+  getResistenciaPoke(DefensorBase, Resistencia),
+  getDanoAttack(AtaqueSeleccionado, DanoBase),
+  getDano(PokeActivo, DanoActual),
+  
+  calcular_dano_modificado(TipoAtacante, Debilidad, Resistencia, DanoBase, DanoFinal),
+  NuevoDano is DanoActual + DanoFinal,
+
+  getId(Defensor, IdD),
+  getCartasAsociadas(Defensor, AsociadasD),
+  getEnergias(Defensor, EnergiasD),
+  getEstado(Defensor, EstadoD),
+  DefensorActualizado = [IdD, DefensorBase, AsociadasD, EnergiasD, NuevoDano, EstadoD],
+
+  verificar_knockout(J1Inter, J2Inter, DefensorActualizado, NuevoJ1, NuevoJ2),
+  GameOut = [NuevoJ1, NuevoJ2, 1].  
 
 
 
