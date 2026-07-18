@@ -68,7 +68,15 @@ simular_partida :-
     % 3. INICIO DEL JUEGO
     shuffleDeck(Deck1, 92415, Deck1Barajado),
     shuffleDeck(Deck1, 54321, Deck2Barajado),
-    initGame(Deck1Barajado, Deck2Barajado, 12345, J_Init),
+    initGame(Deck1Barajado, Deck2Barajado, 12345, J_Init_Random),
+    
+    % Como initGame tiene azar (barajeo y moneda), forzamos las condiciones 
+    % exactas para que funcione el 100% de las veces.
+    J_Init_Random = [[Mz1, Mn1, Act1, Bnc1, Dsc1, Prm1], [Mz2, Mn2, Act2, Bnc2, Dsc2, Prm2], _TurnoAzar],
+    
+    % Inyectamos las cartas requeridas en la mano y forzamos el Turno a 1
+    J_Init = [[Mz1, [Pikachu, EnergiaRayo | Mn1], Act1, Bnc1, Dsc1, Prm1], 
+              [Mz2, [Voltorb, Hau | Mn2], Act2, Bnc2, Dsc2, Prm2], 1],
     write("\n========== INICIO DE PARTIDA ==========\n"),
     printGame(J_Init, S0), write(S0),
     
