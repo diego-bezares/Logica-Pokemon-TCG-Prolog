@@ -37,7 +37,6 @@ setJugador2([Jugador1, _, TurnoActual], NuevoJugador2, NewGame):-
 
 setTurnoActual([Jugador1, Jugador2, _], NuevoTurno, NewGame):-
   NewGame = [Jugador1, Jugador2, NuevoTurno].
-  NewGame = [Jugador1, Jugador2, NuevoTurno].
 
 
 
