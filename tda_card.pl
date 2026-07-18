@@ -76,19 +76,19 @@ getExpansionCard([_, Expansion | _], Expansion).
 getNumeroCard([_, _, Numero | _], Numero).
 getNombreCard([_, _, _, Nombre | _], Nombre).
 % =========== (Tipo: Pokemon) ==========
-getEvolucioDePoke([_, _, _, _, EvolucionDe | _], EvolucionDe).
-getPsPoke([_, _, _, _, _, Ps | _], Ps).
-getTipoPoke([_, _, _, _, _, _, Tipo | _], Tipo).
-getDebilidadPoke([_, _, _, _, _, _, _, Debilidad | _], Debilidad).
-getResistenciaPoke([_, _, _, _, _, _, _, _, Resistencia | _], Resistencia).
-getCosteRetiradaPoke([_, _, _, _, _, _, _, _, _, CosteRetirada | _], CosteRetirada).
-getEsExPoke([_, _, _, _, _, _, _, _, _, _, EsEx | _], EsEx).
-getHabilidadPoke([_, _, _, _, _, _, _, _, _, _, _, Habilidad | _], Habilidad).
-getAtaquesPoke([_, _, _, _, _, _, _, _, _, _, _, _, Ataques | _], Ataques).
+getEvolucionDePoke([pokemon, _, _, _, EvolucionDe | _], EvolucionDe).
+getPsPoke([pokemon, _, _, _, _, Ps | _], Ps).
+getTipoPoke([pokemon, _, _, _, _, _, Tipo | _], Tipo).
+getDebilidadPoke([pokemon, _, _, _, _, _, _, Debilidad | _], Debilidad).
+getResistenciaPoke([pokemon, _, _, _, _, _, _, _, Resistencia | _], Resistencia).
+getCosteRetiradaPoke([pokemon, _, _, _, _, _, _, _, _, CosteRetirada | _], CosteRetirada).
+getEsExPoke([pokemon, _, _, _, _, _, _, _, _, _, EsEx | _], EsEx).
+getHabilidadPoke([pokemon, _, _, _, _, _, _, _, _, _, _, Habilidad | _], Habilidad).
+getAtaquesPoke([pokemon, _, _, _, _, _, _, _, _, _, _, _, Ataques | _], Ataques).
 % ============ (Tipo: Entrenador) ==========
-getTipoTrainer([_, _, _, _, TipoEntrenador | _], TipoEntrenador).
-getTextoTrainer([_, _, _, _, _, Texto | _], Texto).
-getPredicadoTrainer([_, _, _, _, _, _, Predicado | _], Predicado).
+getTipoTrainer([trainer, _, _, _, TipoEntrenador | _], TipoEntrenador).
+getTextoTrainer([trainer, _, _, _, _, Texto | _], Texto).
+getPredicadoTrainer([trainer, _, _, _, _, _, Predicado | _], Predicado).
 
 
 
