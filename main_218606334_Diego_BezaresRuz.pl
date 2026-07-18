@@ -1,3 +1,9 @@
+:- use_module(tda_jugador).
+:- use_module(tda_juego).
+:- use_module(tda_carta_en_juego).
+:- use_module(tda_card).
+:- use_module(tda_attack).
+
 % ==================================================================
 % ================== FUNCIONES AUXILIARES ==========================
 % ==================================================================
@@ -70,8 +76,8 @@ tiene_pokemon_basico([Cabeza | Cola]):-
 tiene_pokemon_basico([Cabeza | Cola]):-
   getTypeCard(Cabeza, Tipo),
   Tipo == pokemon,
-  getEvolucionDePoke(Cabeza; EvolucionDe),
-  EvoluionDe \== null,
+  getEvolucionDePoke(Cabeza, EvolucionDe),
+  EvolucionDe \== null,
   tiene_pokemon_basico(Cola).
 % ==================================================================
 
@@ -162,7 +168,7 @@ jugar_carta_banca([Mazo, Mano, PokeActivo, Banca, Descarte, Premios], Carta, Jug
   % Se obtienen los datos necesarios para crear el TDA CartaEnJuego
   getNombreCard(Carta, Nombre),
   Id = [Nombre, L],
-  initCartaEnJuego(Id, Carta, [], [], 0, normal, NuevaCartaEnJuego)
+  initCartaEnJuego(Id, Carta, [], [], 0, normal, NuevaCartaEnJuego),
 
   % Se unifica todo en la variable JugadorOut.
   NuevaBanca = [NuevaCartaEnJuego | Banca],
@@ -328,18 +334,12 @@ calcular_dano_modificado(TipoAtacante, DebilidadDefensor, _, DanoBase, DanoFinal
   TipoAtacante == DebilidadDefensor,
   DanoFinal is DanoBase * 2.
 
-% Regla 2.1: Resistencia positiva o 0
+% Regla 2: Resistencia
 calcular_dano_modificado(TipoAtacante, _, ResistenciaDefensor, DanoBase, DanoFinal):-
   ResistenciaDefensor \== null,
   TipoAtacante == ResistenciaDefensor,
-  DanoFinal >= 30.
-  DanoFinal is DanoBase - 30.
-% Regla 2.2: Resistencia negativa
-calcular_dano_modificado(TipoAtacante, _, ResistenciaDefensor, DanoBase, DanoFinal):-
-  ResistenciaDefensor \== null,
-  TipoAtacante == ResistenciaDefensor,
-  DanoFinal < 30,
-  DanoFinal = 0.
+  DanoTemp is DanoBase - 30,
+  (DanoTemp < 0 -> DanoFinal = 0 ; DanoFinal = DanoTemp).
 
 % Regla 3: Neutro
 calcular_dano_modificado(TipoAtacante, DebilidadDefensor, ResistenciaDefensor, DanoBase, DanoFinal):-
@@ -467,8 +467,7 @@ formatear_lista_nombres([Carta | Resto], StrOut) :-
 
 % Regla 1: Sobrevive el defensor.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [Mazo, Mano, _, Banca, Descarte, Premios],
-  PokeActivo == DefensorActualizado,
+  JugadorDefensaIn = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
   
   getCartaBase(DefensorActualizado, CartaBaseD),
   getPsPoke(CartaBaseD, PsD),
@@ -480,9 +479,8 @@ verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, Jugad
   
 % Regla 2.1: Muere el defensor. Es Pokemon Normal.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
+  JugadorDefensaIn = [MazoD, ManoD, DefensorActualizado, BancaD, DescarteD, PremiosD],
   JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio | NuevosPremiosA]],
-  PokeActivoD == DefensorActualizado,
   
   getCartaBase(DefensorActualizado, CartaBaseD),
   getPsPoke(CartaBaseD, PsD),
@@ -504,9 +502,8 @@ verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, Jugad
 
 % Regla 2.2: Muere el defensor. Es Pokemon Ex.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
+  JugadorDefensaIn = [MazoD, ManoD, DefensorActualizado, BancaD, DescarteD, PremiosD],
   JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio1, Premio2 | NuevosPremiosA]],
-  PokeActivoD == DefensorActualizado,
   
   getCartaBase(DefensorActualizado, CartaBaseD),
   getPsPoke(CartaBaseD, PsD),
@@ -865,8 +862,8 @@ usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalAr
   getTipoPoke(CartaBase, TipoAtacante),
   getDebilidadPoke(DefensorBase, Debilidad),
   getResistenciaPoke(DefensorBase, Resistencia),
-  getDanoAttack(AtaqueSeleccionado, DanoBase),
-  getDano(PokeActivo, DanoActual),
+  getDanoAttack(AtaqueEncontrado, DanoBase),
+  getDano(Defensor, DanoActual),
   
   calcular_dano_modificado(TipoAtacante, Debilidad, Resistencia, DanoBase, DanoFinal),
   NuevoDano is DanoActual + DanoFinal,
@@ -909,8 +906,8 @@ usePokemonAttack([J1, J2, Turno], PokemonCard, AttackName, PredicateAdditionalAr
   getTipoPoke(CartaBase, TipoAtacante),
   getDebilidadPoke(DefensorBase, Debilidad),
   getResistenciaPoke(DefensorBase, Resistencia),
-  getDanoAttack(AtaqueSeleccionado, DanoBase),
-  getDano(PokeActivo, DanoActual),
+  getDanoAttack(AtaqueEncontrado, DanoBase),
+  getDano(Defensor, DanoActual),
   
   calcular_dano_modificado(TipoAtacante, Debilidad, Resistencia, DanoBase, DanoFinal),
   NuevoDano is DanoActual + DanoFinal,
