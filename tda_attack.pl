@@ -1,9 +1,9 @@
-:- module(tda_attack, [initAttack,
-                       getCostAttack,
-                       getNombreAttack,
-                       getDescripcionAttack,
-                       getDanoAttack,
-                       getPredicadoAttack]).
+:- module(tda_attack, [initAttack/6,
+                       getCostAttack/2,
+                       getNombreAttack/2,
+                       getDescripcionAttack/2,
+                       getDanoAttack/2,
+                       getPredicadoAttack/2]).
 
 
 % =============================
