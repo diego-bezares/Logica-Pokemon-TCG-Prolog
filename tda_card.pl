@@ -6,7 +6,7 @@
     getExpansionCard/2,
     getNumeroCard/2,
     getNombreCard/2,
-    getEvolucioDePoke/2,
+    getEvolucionDePoke/2,
     getPsPoke/2,
     getTipoPoke/2,
     getDebilidadPoke/2,
