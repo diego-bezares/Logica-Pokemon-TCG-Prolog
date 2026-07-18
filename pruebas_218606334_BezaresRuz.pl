@@ -1,11 +1,10 @@
 % ==================================================================
 % ARCHIVO DE PRUEBAS
 % ==================================================================
-% Soluciona el error de importación: Carga el archivo como conocimiento normal
 :- consult('main_218606334_Diego_BezaresRuz_3.pl').
 
 % ==================================================================
-% PREDICADOS DE APOYO (Metaprogramación exigida por la pauta)
+% PREDICADOS DE APOYO
 % ==================================================================
 sinEfecto(JuegoIn, JuegoIn).
 efectoParalizar(JuegoIn, JuegoIn).
@@ -16,7 +15,7 @@ efectoProfessorKukui(JuegoIn, JuegoIn).
 efectoSwitch(JuegoIn, JuegoIn).
 efectoPokemonCatcher(JuegoIn, JuegoIn).
 
-% Efecto Hau: Robar 3 cartas. Demostración de modificación real.
+% Efecto Hau: Robar 3 cartas.
 efectoHau([J1, J2, Turno], JuegoOut) :-
     Turno == 1,
     robar_carta_jugador(J1, _, J1_A), robar_carta_jugador(J1_A, _, J1_B), robar_carta_jugador(J1_B, _, J1_Final),
