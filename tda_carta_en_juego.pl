@@ -1,10 +1,10 @@
-:- module(tda_carta_en_juego, [initCartaEnJuego,
-                               getId,
-                               getCartaBase,
-                               getCartasAsociadas,
-                               getEnergias,
-                               getDano,
-                               getEstado]).
+:- module(tda_carta_en_juego, [initCartaEnJuego/7,
+                               getId/2,
+                               getCartaBase/2,
+                               getCartasAsociadas/2,
+                               getEnergias/2,
+                               getDano/2,
+                               getEstado/2]).
 
 
 % =============================
