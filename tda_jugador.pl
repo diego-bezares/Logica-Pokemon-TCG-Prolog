@@ -1,16 +1,16 @@
-:- module(tda_jugador, [initJugador,
-                       getMazoJugador,
-                       getManoJugador,
-                       getPokeActivoJugador,
-                       getBancaJugador,
-                       getDescarteJugador,
-                       getPremiosJugador,
-                       setMazoJugador,
-                       setManoJugador,
-                       setPokeActivoJugador,
-                       setBancaJugador,
-                       setDescarteJugador,
-                       setPremiosJugador]).
+:- module(tda_jugador, [initJugador/7,
+                       getMazoJugador/2,
+                       getManoJugador/2,
+                       getPokeActivoJugador/2,
+                       getBancaJugador/2,
+                       getDescarteJugador/2,
+                       getPremiosJugador/2,
+                       setMazoJugador/3,
+                       setManoJugador/3,
+                       setPokeActivoJugador/3,
+                       setBancaJugador/3,
+                       setDescarteJugador/3,
+                       setPremiosJugador/3]).
 
 % =============================
 % ======== TDA JUGADOR ========
