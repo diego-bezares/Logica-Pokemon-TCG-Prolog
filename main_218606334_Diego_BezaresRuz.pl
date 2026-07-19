@@ -467,7 +467,7 @@ formatear_lista_nombres([Carta | Resto], StrOut) :-
 
 % Regla 1: Sobrevive el defensor.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [Mazo, Mano, DefensorActualizado, Banca, Descarte, Premios],
+  JugadorDefensaIn = [Mazo, Mano, _, Banca, Descarte, Premios],
   
   getCartaBase(DefensorActualizado, CartaBaseD),
   getPsPoke(CartaBaseD, PsD),
@@ -479,7 +479,7 @@ verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, Jugad
   
 % Regla 2.1: Muere el defensor. Es Pokemon Normal.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [MazoD, ManoD, DefensorActualizado, BancaD, DescarteD, PremiosD],
+  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
   JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio | NuevosPremiosA]],
   
   getCartaBase(DefensorActualizado, CartaBaseD),
@@ -502,7 +502,7 @@ verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, Jugad
 
 % Regla 2.2: Muere el defensor. Es Pokemon Ex.
 verificar_knockout(JugadorDefensaIn, JugadorAtaqueIn, DefensorActualizado, JugadorDefensaOut, JugadorAtaqueOut):-
-  JugadorDefensaIn = [MazoD, ManoD, DefensorActualizado, BancaD, DescarteD, PremiosD],
+  JugadorDefensaIn = [MazoD, ManoD, _, BancaD, DescarteD, PremiosD],
   JugadorAtaqueIn = [MazoA, ManoA, PokeActivoA, BancaA, DescarteA, [Premio1, Premio2 | NuevosPremiosA]],
   
   getCartaBase(DefensorActualizado, CartaBaseD),
