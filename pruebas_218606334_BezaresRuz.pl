@@ -162,7 +162,7 @@ simular_partida_2 :-
     % TURNO 1: JUGADOR 1
     % =================================================================
     write("\n--- J1 Roba una Carta ---\n"),
-    drawCardFromDeck(J_Init, CartaRobada, J_1),
+    drawCardFromDeck(J_Init, _, J_1),
     write("-> drawCardFromDeck OK\n"),
     
     write("\n--- J1 Baja a Pikachu a la Banca y lo hace Activo ---\n"),
