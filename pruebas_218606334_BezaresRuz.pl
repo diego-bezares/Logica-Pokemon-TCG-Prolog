@@ -1,5 +1,5 @@
 % ==================================================================
-% ARCHIVO DE PRUEBAS
+% ARCHIVO DE PRUEBAS FINAL
 % ==================================================================
 :- consult('main_218606334_Diego_BezaresRuz.pl').
 
@@ -41,18 +41,18 @@ efectoPotion([J1, J2, Turno], JuegoOut) :-
     ActivoCurado = [Id, CartaBase, Asociadas, Energias, NuevoDano, Estado],
     JuegoOut = [J1, [Mazo, Mano, ActivoCurado, Banca, Descarte, Premios], Turno].
 
-% Generador de relleno legal para el mazo
+% Generador de relleno legal para armar el mazo de 60
 generar_n_copias(0, _, []).
 generar_n_copias(N, Elemento, [Elemento | Cola]) :-
     N > 0, N1 is N - 1, generar_n_copias(N1, Elemento, Cola).
 
 % ==================================================================
-% REGLA MAESTRA DE SIMULACIÓN (Acá viven las variables)
+% REGLA DE SIMULACIÓN
 % ==================================================================
 simular_partida :-
     % 1. FABRICAR CARTAS BASE
     createEnergyCard("Expansion", 1, "Rayo", EnergiaRayo),
-    % Hacemos que el ataque pegue 60 para asegurar el Knockout en la prueba
+    % Hacemos que el ataque pegue 60 para que sea un One-Shot y probar el Knockout
     createAttack([[1, "Rayo"]], "Impactrueno Mortal", "One shot", 60, sinEfecto, A_Impactrueno),
     createAttack([[1, "Rayo"]], "Bola Relampago", "Basico", 10, sinEfecto, A_BolaRelampago),
     
@@ -60,48 +60,58 @@ simular_partida :-
     createPokemonCard("Exp", 2, "Voltorb", null, 60, "Rayo", "Lucha", null, 1, false, null, [A_BolaRelampago], Voltorb),
     createTrainerCard("Exp", 3, "Hau", "partidario", "Roba 3", efectoHau, Hau),
     
-    % 2. ARMAR MAZO LEGAL (60 cartas, max 4 copias salvo energías, tiene básicos)
+    % 2. ARMAR MAZO (60 cartas exactas)
     generar_n_copias(53, EnergiaRayo, ListaEnergias),
-    MazoBruto = [Pikachu, Pikachu, Voltorb, Voltorb, Hau, Hau, Hau | ListaEnergias],
-    createDeck(MazoBruto, Deck1),
+    MazoOriginal = [Pikachu, Pikachu, Voltorb, Voltorb, Hau, Hau, Hau | ListaEnergias],
+    createDeck(MazoOriginal, Deck1),
     
-    % 3. INICIO DEL JUEGO
-    shuffleDeck(Deck1, 92415, Deck1Barajado),
-    shuffleDeck(Deck1, 54321, Deck2Barajado),
-    initGame(Deck1Barajado, Deck2Barajado, 12345, J_Init_Random),
+    % Ambos jugadores usan exactamente el mismo mazo
+    Deck2 = Deck1,
     
-    % Como initGame tiene azar (barajeo y moneda), forzamos las condiciones 
-    % exactas para que funcione el 100% de las veces.
-    J_Init_Random = [[Mz1, Mn1, Act1, Bnc1, Dsc1, Prm1], [Mz2, Mn2, Act2, Bnc2, Dsc2, Prm2], _TurnoAzar],
+    % 3. INICIO DEL JUEGO (El motor baraja con la semilla)
+    initGame(Deck1, Deck2, 12345, J_Init_Random),
+    % Desempaquetamos el juego aleatorio
+    J_Init_Random = [J1_R, J2_R, _],
+    % Desempaquetamos a los jugadores y quitamos las 2 primeras cartas de sus manos aleatorias
+    J1_R = [Mz1, [_,_ | RestoMn1], Act1, Bnc1, Dsc1, Prm1],
+    J2_R = [Mz2, [_,_ | RestoMn2], Act2, Bnc2, Dsc2, Prm2],
+    % Rearmamos a los jugadores forzando nuestras cartas de prueba.
+    J1_Fix = [Mz1, [Pikachu, EnergiaRayo | RestoMn1], Act1, Bnc1, Dsc1, Prm1],
+    J2_Fix = [Mz2, [Voltorb, Hau | RestoMn2], Act2, Bnc2, Dsc2, Prm2],
+    % Forzamos el inicio en el Turno 1
+    J_Init = [J1_Fix, J2_Fix, 1],
+    % --------------------------------------
     
-    % Inyectamos las cartas requeridas en la mano y forzamos el Turno a 1
-    J_Init = [[Mz1, [Pikachu, EnergiaRayo | Mn1], Act1, Bnc1, Dsc1, Prm1], 
-              [Mz2, [Voltorb, Hau | Mn2], Act2, Bnc2, Dsc2, Prm2], 1],
     write("\n========== INICIO DE PARTIDA ==========\n"),
     printGame(J_Init, S0), write(S0),
     
     % 4. TURNO 1 (Jugador 1: Baja a Pikachu y pasa)
     playToBench(J_Init, Pikachu, J_1),
+    % Extraemos el Jugador 1 y su banca
     J_1 = [J1_A, _, _], J1_A = [_, _, _, [PikaBanca|_], _, _],
     changeActivePokemon(J_1, PikaBanca, J_2),
+    % Extraemos el Jugador 1 y su activo
     J_2 = [J1_B, _, _], J1_B = [_, _, PikaActivoT1, _, _, _],
     usePokemonAttack(J_2, PikaActivoT1, null, [], J_3), % Pasa turno
     
     % 5. TURNO 2 (Jugador 2: Baja a Voltorb y pasa)
     playToBench(J_3, Voltorb, J_4),
-    J_4 = [_, J2Data, _], J2Data = [_, _, _, [VoltBanca|_], _, _],
+    % Extraemos el Jugador 2 y su banca
+    J_4 = [_, J2_A, _], J2_A = [_, _, _, [VoltBanca|_], _, _],
     changeActivePokemon(J_4, VoltBanca, J_5),
-    J_5 = [_, J2Data2, _], J2Data2 = [_, _, VoltActivoT2, _, _, _],
+    % Extraemos el Jugador 2 y su activo
+    J_5 = [_, J2_B, _], J2_B = [_, _, VoltActivoT2, _, _, _],
     usePokemonAttack(J_5, VoltActivoT2, null, [], J_6), % Pasa turno
 
-    % 6. TURNO 3 (Jugador 1: Asigna Energía y ejecuta el Knockout)
-    J_6 = [J1_T3, _, _], J1_T3 = [_, _, PikaActivoT3, _, _, _],
+    % 6. TURNO 3 (Jugador 1: Asigna Energía y ataca)
+    % Extraemos el activo actual del Jugador 1
+    J_6 = [J1_C, _, _], J1_C = [_, _, PikaActivoT3, _, _, _],
     useEnergyCard(J_6, EnergiaRayo, PikaActivoT3, J_7),
     
-    % Extraemos la versión actualizada del Pikachu (ahora con energía) para atacar
-    J_7 = [J1_T3_B, _, _], J1_T3_B = [_, _, PikaActivoT3_B, _, _, _],
+    % Extraemos el activo *actualizado* del Jugador 1 (ahora tiene la energía)
+    J_7 = [J1_D, _, _], J1_D = [_, _, PikaActivoT3_B, _, _, _],
     usePokemonAttack(J_7, PikaActivoT3_B, "Impactrueno Mortal", [], J_Final),
     
     write("\n========== GOLPE Y KNOCKOUT ==========\n"),
     printGame(J_Final, SF), write(SF),
-    write("\n>>> SIMULACION EXITOSA: Voltorb eliminado, Jugador 1 cobró 1 premio.\n").
+    write("\n>>> SIMULACION EXITOSA: Voltorb eliminado, Jugador 1 cobro 1 premio.\n").
