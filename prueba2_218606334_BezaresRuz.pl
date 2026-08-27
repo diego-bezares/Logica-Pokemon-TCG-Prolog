@@ -35,6 +35,10 @@ efectoPotion([J1, J2, Turno], JuegoOut) :-
     ActivoCurado = [Id, CartaBase, Asociadas, Energias, NuevoDano, Estado],
     JuegoOut = [J1, [Mazo, Mano, ActivoCurado, Banca, Descarte, Premios], Turno].
 
+generar_n_copias(0, _, []).
+generar_n_copias(N, Elemento, [Elemento | Cola]) :-
+    N > 0, N1 is N - 1, generar_n_copias(N1, Elemento, Cola).
+
 
 % ==================================================================
 % REGLA DE SIMULACIÓN 2
