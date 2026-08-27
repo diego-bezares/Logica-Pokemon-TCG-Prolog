@@ -118,6 +118,3 @@ simular_partida :-
     printGame(J_Final, SF), write(SF),
     write("\n>>> SIMULACION EXITOSA: Voltorb eliminado, Jugador 1 cobro 1 premio.\n").
 
-    write("\n========== RESULTADO FINAL (RF09) ==========\n"),
-    printGame(J_Final, SF), write(SF),
-    write("\n>>> SIMULACION 2 EXITOSA.\n").
