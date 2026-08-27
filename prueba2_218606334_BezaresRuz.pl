@@ -158,6 +158,6 @@ simular_partida_2 :-
         write("-> FALLO CRITICO en usePokemonAttack.\n"), fail
     ),
 
-generar_n_copias(0, _, []).
-generar_n_copias(N, Elemento, [Elemento | Cola]) :-
-    N > 0, N1 is N - 1, generar_n_copias(N1, Elemento, Cola).
+    write("\n========== RESULTADO FINAL (RF09) ==========\n"),
+    printGame(J_Final, SF), write(SF),
+    write("\n>>> SIMULACION 2 EXITOSA.\n").
