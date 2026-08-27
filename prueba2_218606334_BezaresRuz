@@ -1,0 +1,40 @@
+% ==================================================================
+% ARCHIVO DE PRUEBAS FINAL
+% ==================================================================
+:- consult('main_218606334_Diego_BezaresRuz.pl').
+
+% ==================================================================
+% PREDICADOS DE APOYO
+% ==================================================================
+sinEfecto(JuegoIn, JuegoIn).
+efectoParalizar(JuegoIn, JuegoIn).
+efectoGreatBall(JuegoIn, JuegoIn).
+efectoCynthia(JuegoIn, JuegoIn).
+efectoPokemonFanClub(JuegoIn, JuegoIn).
+efectoProfessorKukui(JuegoIn, JuegoIn).
+efectoSwitch(JuegoIn, JuegoIn).
+efectoPokemonCatcher(JuegoIn, JuegoIn).
+
+efectoHau([J1, J2, Turno], JuegoOut) :-
+    Turno == 1,
+    robar_carta_jugador(J1, _, J1_A), robar_carta_jugador(J1_A, _, J1_B), robar_carta_jugador(J1_B, _, J1_Final),
+    JuegoOut = [J1_Final, J2, Turno].
+efectoHau([J1, J2, Turno], JuegoOut) :-
+    Turno == 2,
+    robar_carta_jugador(J2, _, J2_A), robar_carta_jugador(J2_A, _, J2_B), robar_carta_jugador(J2_B, _, J2_Final),
+    JuegoOut = [J1, J2_Final, Turno].
+
+efectoPotion([J1, J2, Turno], JuegoOut) :-
+    Turno == 1, J1 = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+    PokeActivo = [Id, CartaBase, Asociadas, Energias, DanoActual, Estado], NuevoDano is max(0, DanoActual - 30),
+    ActivoCurado = [Id, CartaBase, Asociadas, Energias, NuevoDano, Estado],
+    JuegoOut = [[Mazo, Mano, ActivoCurado, Banca, Descarte, Premios], J2, Turno].
+efectoPotion([J1, J2, Turno], JuegoOut) :-
+    Turno == 2, J2 = [Mazo, Mano, PokeActivo, Banca, Descarte, Premios],
+    PokeActivo = [Id, CartaBase, Asociadas, Energias, DanoActual, Estado], NuevoDano is max(0, DanoActual - 30),
+    ActivoCurado = [Id, CartaBase, Asociadas, Energias, NuevoDano, Estado],
+    JuegoOut = [J1, [Mazo, Mano, ActivoCurado, Banca, Descarte, Premios], Turno].
+
+generar_n_copias(0, _, []).
+generar_n_copias(N, Elemento, [Elemento | Cola]) :-
+    N > 0, N1 is N - 1, generar_n_copias(N1, Elemento, Cola).
